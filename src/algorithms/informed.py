@@ -1,9 +1,4 @@
 """Informed search algorithms."""
 
+from .pathfinding import a_star, greedy
 
-def a_star(*args, **kwargs):
-    raise NotImplementedError
-
-
-def greedy(*args, **kwargs):
-    raise NotImplementedError
