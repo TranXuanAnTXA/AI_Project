@@ -5,62 +5,93 @@ from utils.node import Node
 # ==========================================
 # 1. LEARNING REAL-TIME A* (LRTA*)
 # ==========================================
+import sys
+
+# Robust imports to support both sys.path environments
+try:
+    from utils.node import Node
+    from utils.heuristics import manhattan
+except ModuleNotFoundError:
+    from src.utils.node import Node
+    from src.utils.heuristics import manhattan
+
+try:
+    from algorithms.common import PathSearchResult, GridMapAdapter, reconstruct_path_from_node
+except ModuleNotFoundError:
+    from src.algorithms.common import PathSearchResult, GridMapAdapter, reconstruct_path_from_node
+
+
+# ==========================================
+# 1. LEARNING REAL-TIME A* (LRTA*)
+# ==========================================
 class LRTAStar:
-    def __init__(self):
-        # Bộ nhớ (Memory) của Agent: Lưu trữ khoảng cách Heuristic cập nhật liên tục
-        # Key: (x, y) -> Value: Heuristic estimate
-        self.memory_table = {} 
-
-    def find_path(self, start_node, target_node, game_map):
-        current_node = start_node
+    """
+    Thuật toán LRTA* học Heuristic theo thời gian thực.
+    Khác với A* lên kế hoạch toàn bộ đường đi trước khi chạy, LRTA* quyết định 
+    bước đi ngay lập tức và cập nhật Heuristic nếu đi vào ngõ cụt.
+    """
+    def __init__(self, heuristic_fn=manhattan) -> None:
+        self.heuristic_fn = heuristic_fn
+        self.visited_order: list[tuple[int, int]] = []
+        self.expanded_nodes: int = 0
+        self.frontier_max_size: int = 1 # LRTA* tìm kiếm cục bộ, không duy trì frontier lớn
         
-        # Biến an toàn để tránh vòng lặp vô tận nếu Agent bị nhốt kín
-        max_steps = 2000 
-        step_count = 0
+        # Bảng trí nhớ lưu trữ Heuristic đã cập nhật (H_table)
+        self.h_table: dict[tuple[int, int], float] = {}
 
-        while current_node.x != target_node.x or current_node.y != target_node.y:
-            if step_count > max_steps:
-                return None # Kẹt cứng không lối thoát
-            step_count += 1
+    def _get_h(self, node: Node, target_node: Node) -> float:
+        """Lấy giá trị Heuristic từ bộ nhớ, nếu chưa có thì tính bằng hàm chuẩn."""
+        coords = (node.x, node.y)
+        if coords not in self.h_table:
+            self.h_table[coords] = self.heuristic_fn(node, target_node)
+        return self.h_table[coords]
 
-            neighbors = game_map.get_neighbors(current_node)
-            if not neighbors:
+    def find_path(self, start_node: Node, target_node: Node, game_map: GridMapAdapter, max_steps: int = 2000) -> Node | None:
+        current_node = start_node
+        self.visited_order = [(current_node.x, current_node.y)]
+        self.expanded_nodes = 0
+
+        # Vòng lặp Real-time: Agent thực sự di chuyển từng bước
+        while not (current_node.x == target_node.x and current_node.y == target_node.y):
+            # Cơ chế an toàn (Failsafe) tránh lặp vô tận nếu bị nhốt kín
+            if self.expanded_nodes > max_steps:
                 return None
 
+            self.expanded_nodes += 1
+            neighbors = game_map.get_neighbors(current_node)
+
+            if not neighbors:
+                return None  # Ngõ cụt hoàn toàn
+
             best_neighbor = None
-            min_f_score = math.inf
+            min_f_value = float('inf')
 
-            # Bước 1: Nhìn quanh các ô láng giềng và đánh giá
+            # 1. Đánh giá tất cả các bước đi lân cận
             for neighbor in neighbors:
-                coords = (neighbor.x, neighbor.y)
-                
-                # Nếu ô này từng đi qua và đã được ghi nhớ, lấy dữ liệu từ bộ nhớ. 
-                # Nếu chưa đi qua, dùng khoảng cách chim bay (Manhattan) mặc định.
-                h_score = self.memory_table.get(coords, self.calculate_heuristic(neighbor, target_node))
-                
-                # Chi phí đi vào ô đó (giả sử là 1 + độ nguy hiểm của bẫy)
-                g_score = 1 + game_map.get_danger_level(neighbor) 
-                f_score = g_score + h_score
+                # f(n) = cost(current -> neighbor) + h(neighbor)
+                # Giả sử chi phí di chuyển cơ bản là 1, cộng thêm bẫy nếu có
+                cost = 1.0 + game_map.get_danger_level(neighbor)
+                f_value = cost + self._get_h(neighbor, target_node)
 
-                if f_score < min_f_score:
-                    min_f_score = f_score
+                if f_value < min_f_value:
+                    min_f_value = f_value
                     best_neighbor = neighbor
 
-            # Bước 2: CẬP NHẬT TRÍ NHỚ (Learning Step) CỰC KỲ QUAN TRỌNG
-            # Trươc khi rời đi, Agent ghi đè lại mức độ "tồi tệ" của ô đang đứng.
-            # Nếu nó là ngõ cụt, min_f_score sẽ rất cao, ô này sẽ bị "đánh dấu" là nguy hiểm.
-            self.memory_table[(current_node.x, current_node.y)] = min_f_score
+            if best_neighbor is None:
+                return None
 
-            # Bước 3: Di chuyển
+            # 2. Học (Cập nhật Heuristic): 
+            # Giá trị Heuristic thực tế của ô hiện tại bằng f_value của hàng xóm tốt nhất
+            current_coords = (current_node.x, current_node.y)
+            # LRTA* chuẩn chỉ cập nhật nếu giá trị mới lớn hơn giá trị cũ
+            self.h_table[current_coords] = max(self._get_h(current_node, target_node), min_f_value)
+
+            # 3. Di chuyển
             best_neighbor.parent = current_node
             current_node = best_neighbor
+            self.visited_order.append((current_node.x, current_node.y))
 
-        # Trong LRTA*, đường đi `.parent` có thể ngoằn ngoèo và chứa nhiều vòng lặp 
-        # (do Agent đi tới đi lui để thử đường).
-        return current_node 
-
-    def calculate_heuristic(self, node_a, node_b):
-        return abs(node_a.x - node_b.x) + abs(node_a.y - node_b.y)
+        return current_node
 
 # ==========================================
 # 2. AND-OR SEARCH
@@ -126,12 +157,47 @@ class AndOrSearch:
 # HÀM BỌC (WRAPPER FUNCTIONS)
 # ==========================================
 
-def lrta_star(start_node, target_node, game_map, *args, **kwargs):
-    """ Hàm bọc gọi thuật toán LRTA*. Lưu ý: Thuật toán này có tính duy trì trạng thái (Stateful) """
-    # Nếu muốn Agent học qua nhiều lượt chơi, object `solver` này nên được khởi tạo ở cấp Game Manager 
-    # thay vì tạo mới mỗi lần chạy để nó giữ lại được biến `memory_table`.
-    solver = LRTAStar() 
-    return solver.find_path(start_node, target_node, game_map)
+def lrta_star(arg1, arg2, *args, **kwargs) -> PathSearchResult | Node | None:
+    """
+    Hàm bọc thông minh: Hỗ trợ cả Test Harness và Game Engine.
+    """
+    heuristic_fn = kwargs.get('heuristic_fn', manhattan)
+    
+    if isinstance(arg1, list) or (hasattr(arg1, '__len__') and not hasattr(arg1, 'x')):
+        # ---------------------------------------------------------
+        # KỊCH BẢN 1: FILE TEST ĐANG GỌI -> lrta_star(grid, start, goal)
+        # ---------------------------------------------------------
+        grid = arg1
+        start_coords = arg2
+        goal_coords = args[0] if args else kwargs.get("goal")
+        
+        start_node = Node(start_coords[0], start_coords[1])
+        target_node = Node(goal_coords[0], goal_coords[1])
+        game_map = GridMapAdapter(grid, goal_coords)
+        
+        solver = LRTAStar(heuristic_fn=heuristic_fn)
+        goal_node = solver.find_path(start_node, target_node, game_map)
+        
+        found = goal_node is not None
+        path = reconstruct_path_from_node(goal_node) if found else []
+        
+        return PathSearchResult(
+            path=path,
+            visited_order=solver.visited_order,
+            expanded_nodes=solver.expanded_nodes,
+            frontier_max_size=solver.frontier_max_size,
+            found=found
+        )
+    else:
+        # ---------------------------------------------------------
+        # KỊCH BẢN 2: GAME ENGINE ĐANG GỌI -> lrta_star(start_node, target_node, game_map)
+        # ---------------------------------------------------------
+        start_node = arg1
+        target_node = arg2
+        game_map = args[0] if args else kwargs.get("game_map")
+        
+        solver = LRTAStar(heuristic_fn=heuristic_fn)
+        return solver.find_path(start_node, target_node, game_map)
 
 def and_or_search(start_node, target_node, game_map, *args, **kwargs):
     """ Hàm bọc gọi thuật toán AND-OR Search. Trả về Policy (Dict) thay vì Node """
