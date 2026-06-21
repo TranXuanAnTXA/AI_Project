@@ -1,9 +1,8 @@
-"""Entry point for Self-Defeating Dungeon."""
-
-
-def main() -> None:
-    print("Self-Defeating Dungeon is ready.")
-
+from src.ui.scene_manager import SceneManager
+from src.ui.scenes.splash_scene import SplashScene
 
 if __name__ == "__main__":
-    main()
+    app = SceneManager(1280, 720)
+    # Nạp tiền sảnh Splash trước
+    app.switch_scene(SplashScene)
+    app.run()
