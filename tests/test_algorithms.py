@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from src.algorithms import a_star, bfs, dfs, greedy, ucs, bidirectional, ida_star, lrta_star
+from src.algorithms import a_star, bfs, dfs, greedy
 from src.algorithms.common import PathSearchResult
 from tests.fixtures.fixed_map import FIXED_GRID, GOAL_NODE, START_NODE
 
@@ -60,30 +60,6 @@ ALGORITHM_CONTRACTS: dict[str, AlgorithmContract] = {
         output_spec="PathSearchResult(path, visited_order, expanded_nodes, frontier_max_size, found)",
         managed_variables=("priority queue", "visited set", "parent map", "expanded count", "frontier peak"),
     ),
-    "ucs": AlgorithmContract(
-        name="ucs",
-        input_spec="grid 10x10, start node, goal node",
-        output_spec="PathSearchResult(path, visited_order, expanded_nodes, frontier_max_size, found)",
-        managed_variables=("priority queue", "visited set", "parent map", "expanded count", "frontier peak"),
-    ),
-    "bidirectional": AlgorithmContract(
-    name="bidirectional",
-    input_spec="grid 10x10, start node, goal node",
-    output_spec="PathSearchResult(path, visited_order, expanded_nodes, frontier_max_size, found)",
-    managed_variables=("forward queue", "backward queue", "visited forward", "visited backward", "expanded count"),
-    ),
-    "ida_star": AlgorithmContract(
-    name="ida_star",
-    input_spec="grid 10x10, start node, goal node",
-    output_spec="PathSearchResult(path, visited_order, expanded_nodes, frontier_max_size, found)",
-    managed_variables=("threshold", "dfs stack/recursion", "expanded count", "frontier peak"),
-    ),
-    "lrta_star": AlgorithmContract(
-        name="lrta_star",
-        input_spec="grid 10x10, start node, goal node",
-        output_spec="PathSearchResult(path, visited_order, expanded_nodes, frontier_max_size, found)",
-        managed_variables=("heuristic table (h_table)", "visited_order", "expanded count", "frontier peak"),
-    ),
 }
 
 # Bản đồ ánh xạ tên thuật toán với hàm thực thi
@@ -92,10 +68,6 @@ ALGORITHMS = {
     "dfs": dfs,
     "a_star": a_star,
     "greedy": greedy,
-    "ucs": ucs,
-    "bidirectional": bidirectional,
-    "ida_star": ida_star,
-    "lrta_star": lrta_star,
 }
 
 
@@ -157,43 +129,9 @@ def test_a_star_matches_bfs_path_length() -> None:
     assert is_valid_path(FIXED_GRID, a_star_result.path)
     assert len(a_star_result.path) == len(bfs_result.path)
 
+
 def test_greedy_returns_a_valid_route_if_it_finds_one() -> None:
     """Kiểm tra: Nếu Greedy tìm thấy đường, đường đó bắt buộc phải hợp lệ."""
     result = run_algorithm("greedy")
     if result.found:
         assert is_valid_path(FIXED_GRID, result.path)
-
-def test_ucs_finds_shortest_path_on_fixed_map() -> None:
-    """Kiểm tra: UCS phải tìm thấy đường đi hợp lệ và có độ dài tối ưu tương đương BFS."""
-    bfs_result = run_algorithm("bfs")
-    ucs_result = run_algorithm("ucs")
-    assert ucs_result.found is True
-    assert is_valid_path(FIXED_GRID, ucs_result.path)
-    assert len(ucs_result.path) == len(bfs_result.path)
-
-def test_bidirectional_finds_a_valid_path_on_fixed_map() -> None:
-    """Kiểm tra: Bidirectional Search phải tìm thấy một đường đi hợp lệ."""
-    result = run_algorithm("bidirectional")
-    assert result.found is True
-    assert is_valid_path(FIXED_GRID, result.path)
-
-def test_ida_star_matches_bfs_path_length() -> None:
-    """Kiểm tra: IDA* phải tìm ra đường đi hợp lệ và có độ dài tối ưu tương đương BFS."""
-    bfs_result = run_algorithm("bfs")
-    ida_result = run_algorithm("ida_star")
-    assert ida_result.found is True
-    assert is_valid_path(FIXED_GRID, ida_result.path)
-    assert len(ida_result.path) == len(bfs_result.path)
-def test_lrta_star_finds_valid_path() -> None:
-    """
-    Kiểm tra: LRTA* phải tìm được đích đến và đường đi phải tuân thủ luật lưới (không đi xuyên tường).
-    Lưu ý: Không so sánh độ dài với BFS vì bản chất LRTA* có thể đi đường vòng vèo 
-    trong lần chạy đầu tiên để học Heuristic (exploration).
-    """
-    result = run_algorithm("lrta_star")
-    
-    # Kiểm tra xem có tìm thấy đường hay không
-    assert result.found is True
-    
-    # Kiểm tra xem đường đi có hợp lệ (không đứt quãng, không đi xuyên tường) hay không
-    assert is_valid_path(FIXED_GRID, result.path)

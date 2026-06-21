@@ -22,3 +22,19 @@ pip install -r requirements.txt
 ```bash
 python main.py
 ```
+
+## Chạy test thuật toán
+
+Giao diện test thuật toán đã được gắn vào `main.py`. Khi chạy lệnh trên, bạn sẽ thấy một cửa sổ Pygame để chọn BFS, DFS, A* hoặc Greedy trên map cố định.
+
+Nếu muốn chạy test tự động:
+
+```bash
+pytest tests/test_algorithms.py -q
+```
+
+## Dữ liệu test cố định
+
+- Grid cố định: `src/core/fixed_maps.py`
+- Bộ test contract: `tests/test_algorithms.py`
+- Fixture của test: `tests/fixtures/fixed_map.py`
