@@ -1,286 +1,186 @@
-"""Informed search algorithms."""
+"""Informed search algorithms (Dành riêng cho nhánh hoang_anh để vẽ UI)."""
+
 import heapq
 import math
 from collections import deque
+from src.algorithms.common import Grid, Coordinate, validate_grid, iter_neighbors, reconstruct_path
 
-# Import chuẩn hóa theo cấu trúc package tương đối (Relative Imports)
-from ..utils.node import Node
-from ..utils.heuristics import manhattan
-from .common import PathSearchResult
-from .uninformed import GridMapAdapter, reconstruct_path_from_node
+def manhattan(a: Coordinate, b: Coordinate) -> float:
+    """Hàm tính khoảng cách heuristic (Manhattan) cơ bản."""
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 # ==========================================
 # 1. GREEDY BEST-FIRST SEARCH
 # ==========================================
-class GreedyBestFirst:
-    def __init__(self, heuristic_fn=manhattan) -> None:
-        self.heuristic_fn = heuristic_fn
-        self.visited_order: list[tuple[int, int]] = []
-        self.expanded_nodes: int = 0
-        self.frontier_max_size: int = 0
+def greedy_generator(grid: Grid, start: Coordinate, goal: Coordinate, heuristic_fn=manhattan):
+    validate_grid(grid)
 
-    def find_path(self, start_node: Node, target_node: Node, game_map: GridMapAdapter) -> Node | None:
-        open_set = []
-        closed_set = set()
+    # Priority Queue lưu (h_score, tọa độ)
+    open_set = []
+    heapq.heappush(open_set, (heuristic_fn(start, goal), start))
 
-        start_node.h_score = self.calculate_heuristic(start_node, target_node)
-        heapq.heappush(open_set, (start_node.h_score, id(start_node), start_node))
+    came_from = {start: None}
+    visited = set()
 
-        self.visited_order = []
-        self.expanded_nodes = 0
-        self.frontier_max_size = 1
+    while open_set:
+        _, current = heapq.heappop(open_set)
 
-        while open_set:
-            self.frontier_max_size = max(self.frontier_max_size, len(open_set))
-            _, _, current_node = heapq.heappop(open_set)
-            coords = (current_node.x, current_node.y)
+        if current == goal:
+            final_path = reconstruct_path(came_from, goal)
+            frontier = [item[1] for item in open_set]
+            yield current, visited, frontier, final_path
+            break
 
-            if coords in closed_set:
-                continue
+        visited.add(current)
 
-            closed_set.add(coords)
-            self.expanded_nodes += 1
-            self.visited_order.append(coords)
+        for neighbor in iter_neighbors(grid, current):
+            if neighbor not in visited and neighbor not in [item[1] for item in open_set]:
+                came_from[neighbor] = current
+                heapq.heappush(open_set, (heuristic_fn(neighbor, goal), neighbor))
 
-            if current_node.x == target_node.x and current_node.y == target_node.y:
-                return current_node
-
-            for neighbor in game_map.get_neighbors(current_node):
-                coords_n = (neighbor.x, neighbor.y)
-
-                if coords_n not in closed_set:
-                    neighbor.parent = current_node
-                    neighbor.h_score = self.calculate_heuristic(neighbor, target_node)
-                    heapq.heappush(open_set, (neighbor.h_score, id(neighbor), neighbor))
-
-        return None
-
-    def calculate_heuristic(self, node_a: Node, node_b: Node) -> float:
-        return float(self.heuristic_fn(node_a, node_b))
-
+        frontier = [item[1] for item in open_set]
+        yield current, visited, frontier, None
 
 # ==========================================
 # 2. A* SEARCH
 # ==========================================
-class AStar:
-    def __init__(self, heuristic_fn=manhattan) -> None:
-        self.heuristic_fn = heuristic_fn
-        self.visited_order: list[tuple[int, int]] = []
-        self.expanded_nodes: int = 0
-        self.frontier_max_size: int = 0
+def astar_generator(grid: Grid, start: Coordinate, goal: Coordinate, heuristic_fn=manhattan):
+    validate_grid(grid)
 
-    def find_path(self, start_node: Node, target_node: Node, game_map: GridMapAdapter) -> Node | None:
-        open_set = []
-        closed_set = set()
+    # Priority Queue lưu (f_score, tọa độ)
+    open_set = []
+    heapq.heappush(open_set, (0.0, start))
 
-        start_node.g_score = 0.0
-        start_node.h_score = self.calculate_heuristic(start_node, target_node)
-        start_node.f_score = start_node.g_score + start_node.h_score
+    came_from = {start: None}
+    g_score = {start: 0.0}
+    visited = set()
 
-        heapq.heappush(open_set, (start_node.f_score, id(start_node), start_node))
+    while open_set:
+        _, current = heapq.heappop(open_set)
 
-        self.visited_order = []
-        self.expanded_nodes = 0
-        self.frontier_max_size = 1
+        if current == goal:
+            final_path = reconstruct_path(came_from, goal)
+            frontier = [item[1] for item in open_set]
+            yield current, visited, frontier, final_path
+            break
 
-        while open_set:
-            self.frontier_max_size = max(self.frontier_max_size, len(open_set))
-            _, _, current_node = heapq.heappop(open_set)
-            coords = (current_node.x, current_node.y)
+        visited.add(current)
 
-            if coords in closed_set:
-                continue
-            closed_set.add(coords)
-            self.expanded_nodes += 1
-            self.visited_order.append(coords)
+        for neighbor in iter_neighbors(grid, current):
+            tentative_g = g_score[current] + 1.0 # Chi phí đi 1 bước luôn là 1
 
-            if current_node.x == target_node.x and current_node.y == target_node.y:
-                return current_node
+            if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score = tentative_g + heuristic_fn(neighbor, goal)
+                heapq.heappush(open_set, (f_score, neighbor))
 
-            for neighbor in game_map.get_neighbors(current_node):
-                if (neighbor.x, neighbor.y) in closed_set:
-                    continue
-
-                tentative_g_score = current_node.g_score + 1.0
-
-                if tentative_g_score < neighbor.g_score or neighbor.g_score == 0.0:
-                    neighbor.parent = current_node
-                    neighbor.g_score = tentative_g_score
-                    neighbor.h_score = self.calculate_heuristic(neighbor, target_node)
-                    neighbor.f_score = neighbor.g_score + neighbor.h_score
-                    heapq.heappush(open_set, (neighbor.f_score, id(neighbor), neighbor))
-
-        return None
-
-    def calculate_heuristic(self, node_a: Node, node_b: Node) -> float:
-        return float(self.heuristic_fn(node_a, node_b))
-
+        frontier = [item[1] for item in open_set]
+        yield current, visited, frontier, None
 
 # ==========================================
-# 3. IDA*
+# 3. BIDIRECTIONAL SEARCH
 # ==========================================
-class IDAStar:
-    def __init__(self, heuristic_fn=manhattan) -> None:
-        self.heuristic_fn = heuristic_fn
-        self.visited_order: list[tuple[int, int]] = []
-        self.expanded_nodes: int = 0
-        self.frontier_max_size: int = 0
+def bidirectional_generator(grid: Grid, start: Coordinate, goal: Coordinate):
+    validate_grid(grid)
 
-    def find_path(self, start_node: Node, target_node: Node, game_map: GridMapAdapter) -> Node | None:
-        threshold = self.calculate_heuristic(start_node, target_node)
-        self.visited_order = []
-        self.expanded_nodes = 0
-        self.frontier_max_size = 1
+    forward_queue = deque([start])
+    backward_queue = deque([goal])
 
-        while True:
-            result_node, new_threshold = self.search(start_node, 0.0, threshold, target_node, game_map)
-            if result_node is not None:
-                return result_node
-            if new_threshold == math.inf:
-                return None
-            threshold = new_threshold
+    forward_came_from = {start: None}
+    backward_came_from = {goal: None}
 
-    def search(self, current_node: Node, g_score: float, threshold: float, target_node: Node, game_map: GridMapAdapter) -> tuple[Node | None, float]:
-        f_score = g_score + self.calculate_heuristic(current_node, target_node)
-        if f_score > threshold:
-            return None, f_score
+    forward_visited = {start}
+    backward_visited = {goal}
 
-        coords = (current_node.x, current_node.y)
-        if coords not in self.visited_order:
-            self.visited_order.append(coords)
-            self.expanded_nodes += 1
+    while forward_queue and backward_queue:
+        # --- Lan tỏa từ Start ---
+        current_f = forward_queue.popleft()
+        if current_f in backward_visited:
+            path_f = reconstruct_path(forward_came_from, current_f)
+            # Nối đường đi từ nhánh backward ngược lại
+            curr = backward_came_from[current_f]
+            path_b = []
+            while curr is not None:
+                path_b.append(curr)
+                curr = backward_came_from[curr]
+            final_path = path_f + path_b
+            yield current_f, forward_visited | backward_visited, list(forward_queue) + list(backward_queue), final_path
+            break
 
-        if current_node.x == target_node.x and current_node.y == target_node.y:
-            return current_node, f_score
+        for neighbor in iter_neighbors(grid, current_f):
+            if neighbor not in forward_visited:
+                forward_visited.add(neighbor)
+                forward_came_from[neighbor] = current_f
+                forward_queue.append(neighbor)
 
-        min_exceeded_threshold = math.inf
+        yield current_f, forward_visited | backward_visited, list(forward_queue) + list(backward_queue), None
 
-        for neighbor in game_map.get_neighbors(current_node):
-            neighbor.parent = current_node
-            result_node, new_threshold = self.search(neighbor, g_score + 1.0, threshold, target_node, game_map)
+        # --- Lan tỏa từ Goal ---
+        current_b = backward_queue.popleft()
+        if current_b in forward_visited:
+            path_f = reconstruct_path(forward_came_from, current_b)
+            curr = backward_came_from[current_b]
+            path_b = []
+            while curr is not None:
+                path_b.append(curr)
+                curr = backward_came_from[curr]
+            final_path = path_f + path_b
+            yield current_b, forward_visited | backward_visited, list(forward_queue) + list(backward_queue), final_path
+            break
 
-            if result_node is not None:
-                return result_node, new_threshold
-            if new_threshold < min_exceeded_threshold:
-                min_exceeded_threshold = new_threshold
+        for neighbor in iter_neighbors(grid, current_b):
+            if neighbor not in backward_visited:
+                backward_visited.add(neighbor)
+                backward_came_from[neighbor] = current_b
+                backward_queue.append(neighbor)
 
-        return None, min_exceeded_threshold
-
-    def calculate_heuristic(self, node_a: Node, node_b: Node) -> float:
-        return float(self.heuristic_fn(node_a, node_b))
-
-
-# ==========================================
-# 4. BIDIRECTIONAL SEARCH
-# ==========================================
-class BidirectionalSearch:
-    def __init__(self) -> None:
-        self.visited_order: list[tuple[int, int]] = []
-        self.expanded_nodes: int = 0
-        self.frontier_max_size: int = 0
-
-    def find_path(self, start_node: Node, target_node: Node, game_map: GridMapAdapter) -> Node | None:
-        forward_queue = deque([start_node])
-        backward_queue = deque([target_node])
-
-        forward_visited = {(start_node.x, start_node.y): start_node}
-        backward_visited = {(target_node.x, target_node.y): target_node}
-
-        self.visited_order = []
-        self.expanded_nodes = 0
-        self.frontier_max_size = 2
-
-        while forward_queue and backward_queue:
-            self.frontier_max_size = max(self.frontier_max_size, len(forward_queue) + len(backward_queue))
-
-            intersect_node = self.expand_frontier(forward_queue, forward_visited, backward_visited, game_map, is_forward=True)
-            if intersect_node:
-                return self.build_path(intersect_node)
-
-            intersect_node = self.expand_frontier(backward_queue, backward_visited, forward_visited, game_map, is_forward=False)
-            if intersect_node:
-                return self.build_path(intersect_node)
-
-        return None
-
-    def expand_frontier(self, queue: deque[Node], my_visited: dict[tuple[int, int], Node], opponent_visited: dict[tuple[int, int], Node], game_map: GridMapAdapter, is_forward: bool) -> Node | None:
-        current_node = queue.popleft()
-        coords = (current_node.x, current_node.y)
-        self.expanded_nodes += 1
-        self.visited_order.append(coords)
-
-        for neighbor in game_map.get_neighbors(current_node):
-            n_coords = (neighbor.x, neighbor.y)
-
-            if n_coords in opponent_visited:
-                if is_forward:
-                    neighbor.parent = current_node
-                else:
-                    current_node.parent = neighbor
-                return neighbor
-
-            if n_coords not in my_visited:
-                neighbor.parent = current_node
-                my_visited[n_coords] = neighbor
-                queue.append(neighbor)
-
-        return None
-
-    def build_path(self, intersect_node: Node) -> Node:
-        return intersect_node
-
+        yield current_b, forward_visited | backward_visited, list(forward_queue) + list(backward_queue), None
 
 # ==========================================
-# HÀM BỌC (WRAPPER FUNCTIONS)
+# 4. IDA* SEARCH
 # ==========================================
+def idastar_generator(grid: Grid, start: Coordinate, goal: Coordinate, heuristic_fn=manhattan):
+    """Sử dụng yield from để đệ quy Generator vẽ được ra UI."""
+    validate_grid(grid)
+    threshold = heuristic_fn(start, goal)
+    came_from = {start: None}
+    visited = set()
 
-def _wrap_solver(solver_cls, arg1, arg2, *args, **kwargs):
-    if isinstance(arg1, list) or (hasattr(arg1, '__len__') and not hasattr(arg1, 'x')):
-        grid = arg1
-        start_coords = arg2
-        goal_coords = args[0] if args else kwargs.get("goal")
+    def search(current, g_score, current_threshold):
+        f_score = g_score + heuristic_fn(current, goal)
+        visited.add(current)
 
-        start_node = Node(start_coords[0], start_coords[1])
-        goal_node_obj = Node(goal_coords[0], goal_coords[1])
-        game_map = GridMapAdapter(grid, goal_coords)
+        # Nhả trạng thái hiện tại ra UI (Frontier rỗng do IDA* dùng đệ quy sâu)
+        yield current, visited.copy(), [], None
 
-        if solver_cls == BidirectionalSearch:
-            solver = solver_cls()
-        else:
-            heuristic_fn = kwargs.get("heuristic_fn", manhattan)
-            solver = solver_cls(heuristic_fn=heuristic_fn)
+        if f_score > current_threshold:
+            return f_score
+        if current == goal:
+            return "FOUND"
 
-        goal_node = solver.find_path(start_node, goal_node_obj, game_map)
-        found = goal_node is not None
-        path = reconstruct_path_from_node(goal_node) if found else []
+        min_exceeded = math.inf
+        for neighbor in iter_neighbors(grid, current):
+            if neighbor not in visited:
+                came_from[neighbor] = current
+                # Đệ quy gọi hàm yield từ bên trong
+                result = yield from search(neighbor, g_score + 1.0, current_threshold)
+                if result == "FOUND":
+                    return "FOUND"
+                if result < min_exceeded:
+                    min_exceeded = result
+                visited.remove(neighbor)
+        return min_exceeded
 
-        return PathSearchResult(
-            path=path,
-            visited_order=solver.visited_order,
-            expanded_nodes=solver.expanded_nodes,
-            frontier_max_size=solver.frontier_max_size,
-            found=found
-        )
-    else:
-        start_node = arg1
-        target_node = arg2
-        game_map = args[0] if args else kwargs.get("game_map")
-        if solver_cls == BidirectionalSearch:
-            solver = solver_cls()
-        else:
-            heuristic_fn = kwargs.get("heuristic_fn", manhattan)
-            solver = solver_cls(heuristic_fn=heuristic_fn)
-        return solver.find_path(start_node, target_node, game_map)
+    while True:
+        visited.clear()
+        result = yield from search(start, 0.0, threshold)
 
-
-def a_star(arg1, arg2, *args, **kwargs):
-    return _wrap_solver(AStar, arg1, arg2, *args, **kwargs)
-
-def greedy(arg1, arg2, *args, **kwargs):
-    return _wrap_solver(GreedyBestFirst, arg1, arg2, *args, **kwargs)
-
-def ida_star(arg1, arg2, *args, **kwargs):
-    return _wrap_solver(IDAStar, arg1, arg2, *args, **kwargs)
-
-def bidirectional(arg1, arg2, *args, **kwargs):
-    return _wrap_solver(BidirectionalSearch, arg1, arg2, *args, **kwargs)
+        if result == "FOUND":
+            final_path = reconstruct_path(came_from, goal)
+            yield goal, visited, [], final_path
+            break
+        if result == math.inf:
+            yield start, visited, [], [] # Không tìm thấy
+            break
+        threshold = result

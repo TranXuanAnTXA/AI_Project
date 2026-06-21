@@ -1,25 +1,11 @@
 """Các hàm hỗ trợ dùng chung và kiểu dữ liệu kết quả cho các thuật toán tìm kiếm.
-Đóng vai trò là "tài nguyên dùng chung" (Shared Toolkit), cung cấp các cấu trúc dữ liệu chuẩn hóa và các hàm hỗ trợ cơ bản cho mọi thuật toán tìm kiếm. Việc tách file này ra giúp mã nguồn của các thuật toán chính (BFS, A*,...) trở nên cực kỳ ngắn gọn và dễ bảo trì.
-
-Cách hoạt động (How it works):
-File này không chứa logic của bất kỳ thuật toán nào. Thay vào đó, nó định nghĩa "khuôn mẫu" (PathSearchResult) mà mọi thuật toán bắt buộc phải tuân theo khi trả về kết quả. Đồng thời, nó xử lý sẵn các tác vụ lặp đi lặp lại mang tính hình học trên ma trận như: kiểm tra ranh giới, kiểm tra vật cản, và mò mẫm truy vết lại đường đi sau khi đã tìm thấy đích.
-
-Các Hàm/Class chính (Core Functions):
-- PathSearchResult (Data Class): Đóng gói toàn bộ đầu ra của một thuật toán vào một đối tượng duy nhất, chứa thông tin về đường đi, thứ tự duyệt, và các chỉ số tài nguyên (RAM/CPU) để gửi ra cho UI hiển thị.
-- validate_grid(grid): Kiểm tra an toàn, ném lỗi ngay nếu nhận vào một ma trận rỗng.
-- in_bounds(grid, node): Kiểm tra xem tọa độ node (dòng, cột) có bị lọt ra ngoài ranh giới của bản đồ hay không.
-- is_walkable(grid, node): Kiểm tra kép: ô đó phải nằm trong bản đồ (in_bounds) VÀ không phải là tường (giá trị khác 1).
-- iter_neighbors(...): Generator cực kỳ quan trọng. Trả về danh sách tọa độ các ô láng giềng xung quanh ô hiện tại (hỗ trợ cả việc cho phép đi chéo hay không).
-- reconstruct_path(came_from, goal): Hàm "Truy vết". Khi thuật toán chạm đích, hàm này dùng từ điển came_from (lưu vết node cha) để dò ngược từ Đích về Bắt đầu, từ đó tạo ra danh sách đường đi màu tím cuối cùng.
-
-Mối liên hệ (Dependencies):
-File này là file "cấp thấp nhất" trong logic AI, không phụ thuộc vào file nào khác trong dự án (chỉ dùng thư viện chuẩn Python). Nó được import bởi tất cả các file chứa thuật toán tìm đường (như pathfinding.py).
+Đóng vai trò là "tài nguyên dùng chung" (Shared Toolkit), cung cấp các cấu trúc dữ liệu chuẩn hóa và các hàm hỗ trợ cơ bản cho mọi thuật toán tìm kiếm.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Iterator, Sequence
+from typing import Iterator, Sequence
 
 Coordinate = tuple[int, int]
 Grid = Sequence[Sequence[int]]

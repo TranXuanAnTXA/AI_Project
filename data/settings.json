@@ -1,0 +1,25 @@
+{
+    "audio": {
+        "master_volume": 100,
+        "bgm_volume": 80,
+        "sfx_volume": 100
+    },
+    "video": {
+        "fullscreen": false,
+        "crt_glitch_effect": true
+    },
+    "ai_visuals": {
+        "simulation_speed": 1,
+        "show_grid_lines": true,
+        "show_node_weights": true,
+        "show_visited_trail": true
+    },
+    "accessibility": {
+        "enable_tooltips": true,
+        "colorblind_mode": false
+    },
+    "game": {
+        "show_fps": true,
+        "allow_pause_anytime": true
+    }
+}
