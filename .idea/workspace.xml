@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9e8596fe-c5d1-4f07-8beb-09d4a720f78b" name="Changes" comment="assets">
-      <change afterPath="$PROJECT_DIR$/src/algorithms/common.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/algorithms/dynamic_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/adversarial.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/adversarial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/informed.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/informed.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/uninformed.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/uninformed.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/simulation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/simulation_manager.py" afterDir="false" />
-    </list>
+    <list default="true" id="9e8596fe-c5d1-4f07-8beb-09d4a720f78b" name="Changes" comment="assets" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
