@@ -32,10 +32,14 @@ class SimulationManager:
     def step(self):
         """Tiến lên 1 frame mô phỏng. Trả về True nếu tìm thấy đường đi."""
         try:
-            _, frontier_rc, visited_rc, path_rc = next(self.algo_gen)
+            # SỬA LỖI 2: Đổi vị trí visited_rc và frontier_rc cho khớp với generator
+            _, visited_rc, frontier_rc, path_rc = next(self.algo_gen)
+
             self.history = [(c, r) for r, c in visited_rc]
             self.visited = set(self.history)
             self.frontier = [(c, r) for r, c in frontier_rc]
+
+            # Lúc này path_rc là list rỗng [], nên không còn bị lỗi NoneType nữa
             self.path = [(c, r) for r, c in path_rc]
 
             return bool(self.path) # Trả về True nếu đường đi (path) đã được tìm thấy
