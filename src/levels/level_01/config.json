@@ -1,0 +1,16 @@
+{
+  "id": 1,
+  "name": "LEVEL 1: BLIND RUNNER",
+  "desc": "Uninformed Search (Tìm kiếm mù)",
+  "algorithms": ["BFS", "DFS"],
+  "unlocked_traps": ["WALL"],
+  "max_rounds": 3,
+  "retries": 1,
+  "ram_max": 200,
+  "cpu_max": 1000,
+  "maps": [
+    {"name": "Mê cung trên", "file": "assets/maps/dungeon_top.tmx"},
+    {"name": "Mê cung dưới", "file": "assets/maps/dungeon_bottom.tmx"},
+    {"name": "Sàn nhà trống", "file": "assets/maps/dungeon_empty.tmx"}
+  ]
+}

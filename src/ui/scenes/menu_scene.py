@@ -6,7 +6,7 @@ import pygame
 from src.ui.scenes.base_scene import BaseScene
 from src.ui.components.ui_elements import ImageButton
 from src.ui.overlays.settings_overlay import SettingsOverlay
-from src.ui.scenes.game_scene import GameScene
+from src.ui.scenes.game_scene.main import GameScene
 
 class MenuScene(BaseScene):
     def __init__(self, manager):
