@@ -2,16 +2,36 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9e8596fe-c5d1-4f07-8beb-09d4a720f78b" name="Changes" comment="assets">
+      <change afterPath="$PROJECT_DIR$/assets/images/block_level_background.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/menu_level_bg.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/walls_floor.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_2.tmx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_3.tmx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/run_grid_map.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/run_test.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/grid_map/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/grid_map/map_controller.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/grid_map/map_loader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/grid_map/tile_engine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ui/overlays/victory_overlay.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ui/scenes/level_menu_scene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/maps/dungeon_map_1.tmx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_1.tmx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/maps/walls_floor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/walls_floor.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/algorithms/algorithm_registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/algorithm_registry.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/local_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/local_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/fixed_maps.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/fixed_maps.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/game_state.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/grid_map.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/level_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/level_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/phase_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/phase_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/levels/base_level.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/base_level.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/simulation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/simulation_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/agent.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/levels/level_01/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_01/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/dashboard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/overlays/failure_overlay.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/overlays/failure_overlay.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/overlays/fly_notification.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/overlays/fly_notification.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/levels/level_03/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_03/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/components/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/components/grid_renderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/grid_renderer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/input_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/input_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/renderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/renderer.py" afterDir="false" />
@@ -33,7 +53,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="hoang_anh" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -66,6 +86,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
@@ -113,6 +134,75 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="map_loader" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Self-Defeating-Dungeon" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/core/grid_map" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/core/grid_map/map_loader.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="run_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Self-Defeating-Dungeon" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tile_engine" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Self-Defeating-Dungeon" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src/core/grid_map" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/core/grid_map/tile_engine.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="Self-Defeating-Dungeon" />
       <option name="ENV_FILES" value="" />
@@ -134,7 +224,7 @@
         <item itemvalue="Python.main" />
         <item itemvalue="Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms" />
         <item itemvalue="Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms" />
-        <item itemvalue="Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms" />
+        <item itemvalue="Python.main" />
         <item itemvalue="Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms" />
       </list>
     </recent_temporary>

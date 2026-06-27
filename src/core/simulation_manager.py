@@ -1,5 +1,6 @@
 """
 📄 Tên File: simulation_manager.py (Nằm trong src/core/)
+* Cập nhật: Khai báo thêm thuộc tính self.current để hỗ trợ Hero đi từng bước trong Local Search.
 """
 import pygame
 
@@ -8,6 +9,7 @@ class SimulationManager:
         self.tile_size = tile_size
         self.algo_gen = None
 
+        self.current = None # [MỚI]: Lưu trữ node hiện tại cho Local Search
         self.visited = set()
         self.frontier = []
         self.path = []
@@ -24,6 +26,7 @@ class SimulationManager:
     def start(self, algo_func, grid, start_node, goal_node):
         """Khởi tạo thuật toán và xóa cache."""
         self.algo_gen = algo_func(grid, start_node, goal_node)
+        self.current = None # [MỚI]: Reset lại biến current khi bắt đầu vòng mới
         self.visited.clear()
         self.frontier.clear()
         self.path.clear()
@@ -32,8 +35,10 @@ class SimulationManager:
     def step(self):
         """Tiến lên 1 frame mô phỏng. Trả về True nếu tìm thấy đường đi."""
         try:
-            # SỬA LỖI 2: Đổi vị trí visited_rc và frontier_rc cho khớp với generator
-            _, visited_rc, frontier_rc, path_rc = next(self.algo_gen)
+            # [ĐÃ SỬA]: Lấy biến current_rc từ generator thay vì bỏ qua bằng dấu '_'
+            current_rc, visited_rc, frontier_rc, path_rc = next(self.algo_gen)
+
+            self.current = current_rc # [MỚI]: Gán biến current để main.py sử dụng
 
             self.history = [(c, r) for r, c in visited_rc]
             self.visited = set(self.history)
@@ -44,6 +49,7 @@ class SimulationManager:
 
             return bool(self.path) # Trả về True nếu đường đi (path) đã được tìm thấy
         except StopIteration:
+            self.current = None
             return False
 
     def rewind_step(self):

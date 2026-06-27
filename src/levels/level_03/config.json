@@ -1,0 +1,14 @@
+{
+  "id": 3,
+  "name": "LEVEL 3: THE ILLUSIONIST",
+  "desc": "Local Search (Khắc phục ngõ cụt)",
+  "algorithms": ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM"],
+  "unlocked_traps": ["WALL"],
+  "max_rounds": 3,
+  "retries": 1,
+  "ram_max": 15,
+  "cpu_max": 2500,
+  "maps": [
+    {"name": "Thử thách ngõ cụt", "file": "assets/maps/dungeon_map_3.tmx"}
+  ]
+}

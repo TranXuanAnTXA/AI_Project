@@ -3,15 +3,24 @@
 * Vai trò: Ánh xạ tên thuật toán (String) trên UI thành các hàm Generator thực tế.
 """
 from src.algorithms.uninformed import bfs_generator, dfs_generator
-# Sau này bạn import thêm các thuật toán khác từ informed.py, local_search.py...
-# from src.algorithms.informed import astar_generator, greedy_generator
+from src.algorithms.informed import astar_generator, greedy_generator, bidirectional_generator, idastar_generator
+from src.algorithms.local_search import hill_climbing, local_beam_search, simulated_annealing
 
 ALGORITHM_REGISTRY = {
+    # LEVEL 1: Uninformed Search
     "BFS": bfs_generator,
     "DFS": dfs_generator,
-    # "A*": astar_generator,
-    # "Greedy": greedy_generator,
-    # Thêm các thuật toán khác vào đây khi bạn code xong
+
+    # LEVEL 2: Informed Search
+    "GREEDY": greedy_generator,
+    "ASTAR": astar_generator,
+    "BIDIRECTIONAL": bidirectional_generator,
+    "IDASTAR": idastar_generator,
+
+    # LEVEL 3: Local Search
+    "HILL_CLIMBING": hill_climbing,
+    "SIMULATED_ANNEALING": simulated_annealing,
+    "LOCAL_BEAM": local_beam_search
 }
 
 def get_algorithm(name: str):

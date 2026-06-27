@@ -54,7 +54,8 @@ class MenuScene(BaseScene):
         if self.intro_timer >= self.intro_duration:
             if self.btn_start.is_clicked(event):
                 print(">>> START")
-                self.manager.switch_scene(GameScene)
+                from src.ui.scenes.level_menu_scene import LevelMenuScene
+                self.manager.switch_scene(LevelMenuScene)
             elif self.btn_tutorials.is_clicked(event):
                 print(">>> TUTORIALS")
             elif self.btn_settings.is_clicked(event):

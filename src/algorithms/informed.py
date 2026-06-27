@@ -67,7 +67,12 @@ def astar_generator(grid: Grid, start: Coordinate, goal: Coordinate, heuristic_f
         visited.add(current)
 
         for neighbor in iter_neighbors(grid, current):
-            tentative_g = g_score[current] + 1.0 # Chi phí đi 1 bước luôn là 1
+            # [ĐÃ SỬA]: Lấy Cost từ ma trận bản đồ. Nếu giá trị = 0 (sàn mặc định của map cũ) thì tính là 1.
+            # Nếu là 5 (Bùn lầy) thì step_cost sẽ là 5.
+            cell_val = grid[neighbor[0]][neighbor[1]]
+            step_cost = float(cell_val) if cell_val > 0 else 1.0
+
+            tentative_g = g_score[current] + step_cost
 
             if neighbor not in g_score or tentative_g < g_score[neighbor]:
                 came_from[neighbor] = current
@@ -163,8 +168,13 @@ def idastar_generator(grid: Grid, start: Coordinate, goal: Coordinate, heuristic
         for neighbor in iter_neighbors(grid, current):
             if neighbor not in visited:
                 came_from[neighbor] = current
+
+                # [ĐÃ SỬA]: Áp dụng hệ thống Cost tương tự A*
+                cell_val = grid[neighbor[0]][neighbor[1]]
+                step_cost = float(cell_val) if cell_val > 0 else 1.0
+
                 # Đệ quy gọi hàm yield từ bên trong
-                result = yield from search(neighbor, g_score + 1.0, current_threshold)
+                result = yield from search(neighbor, g_score + step_cost, current_threshold)
                 if result == "FOUND":
                     return "FOUND"
                 if result < min_exceeded:

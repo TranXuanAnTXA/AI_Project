@@ -4,12 +4,12 @@
   "desc": "Uninformed Search (Tìm kiếm mù)",
   "algorithms": ["BFS", "DFS"],
   "unlocked_traps": ["WALL"],
-  "max_rounds": 3,
+  "max_rounds": 2,
   "retries": 1,
   "ram_max": 200,
-  "cpu_max": 1000,
+  "cpu_max": 600,
   "maps": [
-    {"name": "Mê cung trên", "file": "assets/maps/dungeon_top.tmx"},
+    {"name": "Mê cung trên", "file": "assets/maps/dungeon_map_1.tmx"},
     {"name": "Mê cung dưới", "file": "assets/maps/dungeon_bottom.tmx"},
     {"name": "Sàn nhà trống", "file": "assets/maps/dungeon_empty.tmx"}
   ]

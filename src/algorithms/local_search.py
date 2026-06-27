@@ -1,214 +1,219 @@
-"""Local search algorithms."""
-
-
-"""Local search and evolutionary algorithms."""
+"""
+📄 src/algorithms/local_search.py
+* Chứa các thuật toán tìm kiếm cục bộ: Hill Climbing, Simulated Annealing, Local Beam Search.
+* Hỗ trợ cơ chế "Quantum Leap" (Dịch chuyển tức thời) qua tường khi gặp ngõ cụt.
+"""
 import math
 import random
-from utils.node import Node
 
-# ==========================================
-# 1. HILL CLIMBING (Leo Đồi / Tử Thủ)
-# Đặc điểm: Chỉ nhìn các ô xung quanh, nhảy vào ô an toàn nhất. 
-# Nhược điểm: Dễ bị kẹt ở "đỉnh cục bộ" (chỗ an toàn giả).
-# ==========================================
-class HillClimbing:
-    def find_path(self, start_node, game_map):
-        current_node = start_node
+def manhattan(a, b):
+    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-        while True:
-            # Lấy danh sách các ô láng giềng
-            neighbors = game_map.get_neighbors(current_node)
-            if not neighbors:
+def get_neighbors(grid, node):
+    neighbors = []
+    rows, cols = len(grid), len(grid[0])
+    r, c = node
+    # Lên, Xuống, Trái, Phải
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    for dr, dc in directions:
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 0:
+            neighbors.append((nr, nc))
+    return neighbors
+
+def get_jump_targets(grid, node):
+    targets = []
+    rows, cols = len(grid), len(grid[0])
+    r, c = node
+    # Bước nhảy chính xác 2 ô (vượt qua 1 lớp tường)
+    directions = [(-2, 0), (2, 0), (0, -2), (0, 2)]
+    for dr, dc in directions:
+        nr, nc = r + dr, c + dc
+        if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 0:
+            targets.append((nr, nc))
+    return targets
+
+def hill_climbing(grid, start_node, goal_node):
+    current = start_node
+    came_from = {start_node: None}
+    visited = set([start_node])
+    jumps_left = 3
+
+    while current != goal_node:
+        yield current, visited, [current], []
+
+        neighbors = get_neighbors(grid, current)
+        unvisited_neighbors = [n for n in neighbors if n not in visited]
+        best_neighbor = None
+
+        # Lựa chọn B: Đi vào ô trống tốt nhất có thể, chấp nhận đi men tường vòng vèo
+        # thay vì đứng im khi thấy đích bị che khuất.
+        if unvisited_neighbors:
+            best_neighbor = min(unvisited_neighbors, key=lambda n: manhattan(n, goal_node))
+
+        # NẾU KẸT TẠI NGÕ CỤT VẬT LÝ (Hết đường đi) -> KÍCH HOẠT DỊCH CHUYỂN
+        if best_neighbor is None:
+            if jumps_left > 0:
+                jump_targets = get_jump_targets(grid, current)
+                valid_jumps = [jt for jt in jump_targets if jt not in visited]
+
+                if valid_jumps:
+                    best_neighbor = min(valid_jumps, key=lambda n: manhattan(n, goal_node))
+                    jumps_left -= 1
+                    print(f"⚡ Hill Climbing: Đã Dịch Chuyển Tức Thời! Còn lại {jumps_left} lượt.")
+                else:
+                    break # Hết đường nhảy -> Kẹt cứng, chịu thua
+            else:
+                break # Hết lượt nhảy -> Kẹt cứng, chịu thua
+
+        visited.add(best_neighbor)
+        came_from[best_neighbor] = current
+        current = best_neighbor
+
+    path = []
+    frontier = []
+    if current == goal_node:
+        curr = goal_node
+        while curr:
+            path.append(curr)
+            curr = came_from.get(curr)
+        path.reverse()
+        frontier = [goal_node]
+
+    yield current, visited, frontier, path
+
+def simulated_annealing(grid, start_node, goal_node):
+    current = start_node
+    came_from = {start_node: None}
+    visited = set([start_node])
+    jumps_left = 3
+
+    # Nhiệt độ ban đầu và hệ số làm mát
+    T = 100.0
+    cooling_rate = 0.95
+
+    while current != goal_node:
+        yield current, visited, [current], []
+
+        neighbors = get_neighbors(grid, current)
+        unvisited_neighbors = [n for n in neighbors if n not in visited]
+        next_node = None
+
+        if unvisited_neighbors:
+            # Chọn ngẫu nhiên 1 hàng xóm chưa thăm
+            candidate = random.choice(unvisited_neighbors)
+
+            current_cost = manhattan(current, goal_node)
+            candidate_cost = manhattan(candidate, goal_node)
+
+            if candidate_cost < current_cost:
+                next_node = candidate
+            else:
+                # Kẻ say rượu: Chấp nhận bước đi tệ hơn (xa đích hơn) dựa trên xác suất nhiệt độ
+                probability = math.exp((current_cost - candidate_cost) / T)
+                if random.random() < probability:
+                    next_node = candidate
+
+            # Nếu xác suất từ chối nhưng chưa kẹt tường, vẫn phải ép đi tiếp ô đó để tiếp tục dò đường
+            if next_node is None:
+                next_node = candidate
+
+        # NẾU KẸT TẠI NGÕ CỤT
+        if next_node is None:
+            if jumps_left > 0:
+                jump_targets = get_jump_targets(grid, current)
+                valid_jumps = [jt for jt in jump_targets if jt not in visited]
+
+                if valid_jumps:
+                    next_node = random.choice(valid_jumps) # Say rượu nên nhảy cũng ngẫu nhiên
+                    jumps_left -= 1
+                    print(f"⚡ Simulated Annealing: Kẻ say rượu Dịch Chuyển! Còn {jumps_left} lượt.")
+                else:
+                    break
+            else:
                 break
 
-            best_neighbor = None
-            # Khởi tạo mức an toàn bằng với ô đang đứng
-            max_safety = game_map.get_safety_score(current_node)
+        visited.add(next_node)
+        came_from[next_node] = current
+        current = next_node
+        T *= cooling_rate # Giảm nhiệt độ dần
 
-            # Quét xung quanh để tìm ô có chỉ số phòng thủ (safety) cao nhất
-            for neighbor in neighbors:
-                safety = game_map.get_safety_score(neighbor)
-                
-                # Nếu tìm thấy ô an toàn hơn ô hiện tại
-                if safety > max_safety:
-                    max_safety = safety
-                    best_neighbor = neighbor
+    path = []
+    frontier = []
+    if current == goal_node:
+        curr = goal_node
+        while curr:
+            path.append(curr)
+            curr = came_from.get(curr)
+        path.reverse()
+        frontier = [goal_node]
 
-            # Nếu không có ô nào xung quanh an toàn hơn -> Đã đến "đỉnh đồi"
-            if best_neighbor is None:
-                break # Kẹt ở đỉnh cục bộ, quyết định tử thủ tại đây!
+    yield current, visited, frontier, path
 
-            # Di chuyển sang ô an toàn hơn
-            best_neighbor.parent = current_node
-            current_node = best_neighbor
+def local_beam_search(grid, start_node, goal_node, k=3):
+    # Beam Search duy trì k trạng thái tốt nhất cùng lúc
+    current_beams = [start_node]
+    came_from = {start_node: None}
+    visited = set([start_node])
+    jumps_left = 5 # Được cấp nhiều lượt nhảy hơn
 
-        return current_node # Trả về điểm tử thủ cuối cùng
+    while True:
+        # main.py sẽ lấy current_beams[0] để hiển thị Hero
+        yield current_beams, visited, current_beams, []
 
+        if goal_node in current_beams:
+            break
 
-# ==========================================
-# 2. SIMULATED ANNEALING (Luyện Kim / Lối Đi Hỗn Loạn)
-# Đặc điểm: Khắc tinh của bẫy rập. Đầu game đi lung tung liều mạng (Nhiệt độ cao), 
-# cuối game mới chốt vị trí phòng thủ (Nhiệt độ thấp).
-# ==========================================
-class SimulatedAnnealing:
-    def find_path(self, start_node, game_map):
-        current_node = start_node
-        temperature = 1000.0   # Nhiệt độ khởi điểm (Độ "điên" của thuật toán)
-        cooling_rate = 0.95    # Tốc độ nguội dần mỗi lượt (95%)
-        min_temperature = 1.0  # Ngưỡng dừng
+        if not current_beams:
+            break
 
-        while temperature > min_temperature:
-            neighbors = game_map.get_neighbors(current_node)
-            if not neighbors:
-                break
+        all_candidates = []
+        for node in current_beams:
+            neighbors = get_neighbors(grid, node)
+            unvisited_neighbors = [n for n in neighbors if n not in visited]
 
-            # Bốc ĐẠI một ô láng giềng thay vì tìm ô tốt nhất
-            next_node = random.choice(neighbors)
-            
-            current_safety = game_map.get_safety_score(current_node)
-            next_safety = game_map.get_safety_score(next_node)
-            
-            # Tính độ chênh lệch an toàn
-            delta = next_safety - current_safety
-
-            # TH1: Ô tiếp theo an toàn hơn -> Nhảy vào luôn!
-            if delta > 0:
-                next_node.parent = current_node
-                current_node = next_node
-            
-            # TH2: Ô tiếp theo NGUY HIỂM HƠN -> Tung xúc xắc liều mạng
+            if unvisited_neighbors:
+                for n in unvisited_neighbors:
+                    all_candidates.append((n, node))
             else:
-                # delta âm, nên (delta/temp) sẽ âm. math.exp(âm) ra xác suất từ 0.0 -> 1.0
-                # Nhiệt độ càng cao -> Xác suất liều mạng đâm vào chỗ chết càng lớn
-                acceptance_probability = math.exp(delta / temperature)
-                
-                if random.random() < acceptance_probability:
-                    next_node.parent = current_node
-                    current_node = next_node # Chấp nhận đi lùi / đi vào bẫy
-            
-            # Giảm nhiệt độ (Agent bớt "điên" dần)
-            temperature *= cooling_rate
+                # Kẹt ngõ cụt -> Tìm đường nhảy
+                if jumps_left > 0:
+                    jump_targets = get_jump_targets(grid, node)
+                    valid_jumps = [jt for jt in jump_targets if jt not in visited]
+                    for jt in valid_jumps:
+                        all_candidates.append((jt, node))
 
-        return current_node
+        if not all_candidates:
+            break
 
+        # Chấm điểm và giữ lại đúng k tia sáng tốt nhất
+        all_candidates.sort(key=lambda x: manhattan(x[0], goal_node))
+        best_k_candidates = all_candidates[:k]
 
-# ==========================================
-# 3. GENETIC ALGORITHM (Thuật Toán Di Truyền)
-# Đặc điểm: Tung ra bầy mini-bots (Chuỗi gen). Cá thể nào đi xa + nhiều máu thì giữ lại, 
-# cho lai ghép để sinh ra thế hệ tiếp theo thông minh hơn.
-# ==========================================
-class GeneticAlgorithm:
-    def find_path(self, start_node, target_node, game_map):
-        population_size = 50   # Số lượng mini-bots trong 1 thế hệ
-        generations = 100      # Số đời tiến hóa
-        mutation_rate = 0.1    # Tỉ lệ đột biến gen (10%)
-        dna_length = 30        # Mỗi bot được đi tối đa 30 bước
+        next_beams = []
+        for candidate, parent in best_k_candidates:
+            next_beams.append(candidate)
+            visited.add(candidate)
+            if candidate not in came_from:
+                came_from[candidate] = parent
 
-        # 1. Khởi tạo quần thể ban đầu (Ngẫu nhiên)
-        population = self.init_population(population_size, dna_length)
+        # Phát hiện xem trong k tia sáng được chọn có tia nào vừa dịch chuyển không
+        for candidate, parent in best_k_candidates:
+            if manhattan(candidate, parent) > 1:
+                jumps_left -= 1
+                print(f"⚡ Local Beam: Một tia sáng vừa Dịch Chuyển! Còn {jumps_left} lượt.")
+                break # Trừ 1 lần cho lứa beam này để tránh trừ lố
 
-        for gen in range(generations):
-            # 2. Chấm điểm Fitness (Độ thích nghi) cho từng con bot
-            scored_population = []
-            for dna in population:
-                fitness = self.calculate_fitness(dna, start_node, target_node, game_map)
-                scored_population.append((fitness, dna))
-            
-            # Sắp xếp từ giỏi nhất đến kém nhất
-            scored_population.sort(key=lambda x: x[0], reverse=True)
-            
-            best_dna = scored_population[0][1]
-            
-            # Nếu con giỏi nhất đã chạm đích -> Dừng tiến hóa
-            if self.is_target_reached(best_dna, start_node, target_node, game_map):
-                return self.decode_dna_to_path(best_dna, start_node, game_map)
+        current_beams = next_beams
 
-            # 3. Chọn lọc tự nhiên (Elitism): Giữ lại 20% con tinh anh nhất
-            elite_count = int(population_size * 0.2)
-            elites = [item[1] for item in scored_population[:elite_count]]
+    path = []
+    frontier = []
+    if goal_node in current_beams:
+        curr = goal_node
+        while curr:
+            path.append(curr)
+            curr = came_from.get(curr)
+        path.reverse()
+        frontier = [goal_node]
 
-            # 4. Lai ghép & Đột biến sinh ra thế hệ mới
-            new_population = elites[:] # Đưa các con tinh anh thẳng vào thế hệ sau
-            while len(new_population) < population_size:
-                parent1 = random.choice(elites)
-                parent2 = random.choice(elites)
-                child = self.crossover(parent1, parent2)
-                child = self.mutate(child, mutation_rate)
-                new_population.append(child)
-
-            population = new_population
-
-        # Trả về đường đi của cá thể giỏi nhất sau 100 vòng tiến hóa
-        best_overall_dna = population[0]
-        return self.decode_dna_to_path(best_overall_dna, start_node, game_map)
-
-    # --- CÁC HÀM HỖ TRỢ CHO DI TRUYỀN (HELPER FUNCTIONS) ---
-    
-    def init_population(self, size, length):
-        # DNA là một chuỗi các lệnh di chuyển: ['UP', 'DOWN', 'LEFT', 'RIGHT']
-        directions = [(0, 1), (0, -1), (-1, 0), (1, 0)]
-        return [[random.choice(directions) for _ in range(length)] for _ in range(size)]
-
-    def calculate_fitness(self, dna, start_node, target_node, game_map):
-        # Mô phỏng cho bot chạy theo DNA. Tính điểm dựa trên: Càng gần đích + Càng ít mất máu = Điểm càng cao
-        current_x, current_y = start_node.x, start_node.y
-        hp = 100
-
-        for move_x, move_y in dna:
-            next_x, next_y = current_x + move_x, current_y + move_y
-            # Nếu đụng tường -> Trừ nặng điểm (Penalty)
-            if not game_map.is_walkable(next_x, next_y):
-                hp -= 10
-                continue # Đứng im
-            
-            current_x, current_y = next_x, next_y
-            # Có thể trừ thêm HP nếu giẫm trúng bẫy: hp -= game_map.get_trap_damage(current_x, current_y)
-
-        # Công thức Fitness = HP còn lại + Phần thưởng dựa trên khoảng cách đến đích
-        distance_to_target = abs(current_x - target_node.x) + abs(current_y - target_node.y)
-        fitness = hp + (1000 / (distance_to_target + 1)) 
-        return fitness
-
-    def crossover(self, parent1, parent2):
-        # Cắt đôi gen của bố và mẹ để ghép lại (Single-point crossover)
-        mid = len(parent1) // 2
-        return parent1[:mid] + parent2[mid:]
-
-    def mutate(self, dna, rate):
-        directions = [(0, 1), (0, -1), (-1, 0), (1, 0)]
-        mutated_dna = []
-        for gene in dna:
-            if random.random() < rate:
-                mutated_dna.append(random.choice(directions)) # Đột biến rẽ hướng khác
-            else:
-                mutated_dna.append(gene)
-        return mutated_dna
-
-    def is_target_reached(self, dna, start_node, target_node, game_map):
-        # Logic mô phỏng tương tự tính fitness, check xem (current_x, current_y) == target hay không
-        return False # (Giản lược để tập trung cấu trúc thuật toán)
-
-    def decode_dna_to_path(self, dna, start_node, game_map):
-        # Hàm này sẽ chạy chuỗi gen chiến thắng và trả về Node cuối cùng với tập hợp `.parent` hoàn chỉnh
-        # để View có thể vẽ lại đường đi.
-        return start_node 
-
-
-# ==========================================
-# HÀM BỌC (WRAPPER FUNCTIONS)
-# ==========================================
-
-def hill_climbing(start_node, game_map, *args, **kwargs):
-    """ Hàm bọc gọi thuật toán Hill Climbing. """
-    solver = HillClimbing()
-    return solver.find_path(start_node, game_map)
-
-def simulated_annealing(start_node, game_map, *args, **kwargs):
-    """ Hàm bọc gọi thuật toán Simulated Annealing. """
-    solver = SimulatedAnnealing()
-    return solver.find_path(start_node, game_map)
-
-def genetic_algorithm(start_node, target_node, game_map, *args, **kwargs):
-    """ Hàm bọc gọi thuật toán Genetic Algorithm. Yêu cầu thêm tham số target_node. """
-    solver = GeneticAlgorithm()
-    return solver.find_path(start_node, target_node, game_map)
+    yield current_beams, visited, frontier, path

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tileset version="1.10" tiledversion="1.12.2" name="walls_floor" tilewidth="16" tileheight="16" tilecount="299" columns="13">
- <image source="../../../../AI/assets/walls_floor.png" width="208" height="368"/>
+ <image source="../images/walls_floor.png" width="208" height="368"/>
  <tile id="1">
   <objectgroup draworder="index" id="8">
    <object id="7" x="0.0434783" y="12">
