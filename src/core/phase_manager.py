@@ -1,6 +1,6 @@
 """
 📄 Tên File: phase_manager.py (Nằm trong src/core/)
-* Cập nhật: Sửa kẹt Pause, Đồng hồ trôi nhanh theo x2/x3, Fix logic Boss tràn RAM.
+* Cập nhật: Thêm trạng thái DYING (Hấp hối) kéo dài 2 giây để Hero kịp chạy animation gục ngã.
 """
 
 class PhaseManager:
@@ -17,6 +17,11 @@ class PhaseManager:
         self.hero_history_algo = ""
         self.failure_reason = ""
 
+        # [MỚI]: Biến phục vụ đếm ngược chờ Animation gục ngã
+        self.death_timer = 0.0
+        self.pending_reason = ""
+        self.is_boss_win_pending = False
+
     def reset_for_new_level(self):
         cfg = self.level_manager.get_current_config()
         self.current_round = 1
@@ -27,25 +32,40 @@ class PhaseManager:
         self.set_state("ANNOUNCING")
 
     def set_state(self, new_state):
-        old_state = self.state # Lưu lại trạng thái cũ
+        old_state = self.state
         self.state = new_state
 
         if new_state == "PREPARING":
             self.timer = self.prep_time
             self.dashboard.algo_state = "IDLE"
         elif new_state == "EXECUTING":
-            # CHỈ RESET ĐỒNG HỒ KHI BẮT ĐẦU TỪ PREPARING
             if old_state == "PREPARING":
                 self.timer = self.exec_time
             self.dashboard.algo_state = "RUNNING"
-        elif new_state in ["IDLE", "FAIL_SCREEN", "LEVEL_COMPLETE", "ANNOUNCING"]:
+        elif new_state in ["IDLE", "FAIL_SCREEN", "LEVEL_COMPLETE", "ANNOUNCING", "DYING"]:
             self.dashboard.algo_state = "IDLE"
 
-    # [ĐÃ SỬA]: Nhận tốc độ và Fix logic Boss thắng
-    def update(self, time_delta, game_stats, speed_multiplier=1.0):
-        if self.state in ["PREPARING", "EXECUTING", "MOVING"]:
+    # [MỚI]: Kích hoạt trạng thái Hấp Hối (Chờ 2 giây)
+    def trigger_death(self, reason, is_boss_win=False):
+        print(f"💀 HERO BẮT ĐẦU CHẾT: {reason}")
+        self.pending_reason = reason
+        self.is_boss_win_pending = is_boss_win
+        self.death_timer = 2.0  # Chờ 2 giây để xem animation ngã
+        self.set_state("DYING")
 
-            # Nếu đang chạy thuật toán hoặc đi bộ -> Đồng hồ chạy x2, x3. Nếu đang chuẩn bị -> Thời gian thực
+    def update(self, time_delta, game_stats, speed_multiplier=1.0):
+        # [MỚI]: Xử lý đếm ngược 2s khi đang hấp hối
+        if self.state == "DYING":
+            self.death_timer -= time_delta
+            if self.death_timer <= 0:
+                if self.is_boss_win_pending:
+                    print("💀 GHOST HERO ĐÃ BỊ TIÊU DIỆT HOÀN TOÀN! BOSS WIN.")
+                    self.trigger_success()
+                else:
+                    self.trigger_failure(self.pending_reason)
+            return False # Chặn các logic tính toán khác phía dưới
+
+        if self.state in ["PREPARING", "EXECUTING", "MOVING"]:
             actual_delta = time_delta * speed_multiplier if self.state in ["EXECUTING", "MOVING"] else time_delta
             self.timer -= actual_delta
 
@@ -62,19 +82,11 @@ class PhaseManager:
                 cpu = game_stats.get("cpu", 0)
                 cfg = self.level_manager.get_current_config()
 
+                # [ĐÃ SỬA]: Chuyển sang gọi trigger_death thay vì xử lý ngay lập tức
                 if ram > cfg.get("ram_max", 9999):
-                    if self.current_phase == "HERO":
-                        self.trigger_failure("OUT OF MEMORY: RAM MAXED OUT")
-                    else: # BOSS PHA: Tràn RAM nghĩa là Boss thắng!
-                        print("💀 GHOST HERO HẾT RAM! BOSS WIN.")
-                        self.trigger_success()
-
+                    self.trigger_death("OUT OF MEMORY: TỔN THƯƠNG NHÃN LỰC (RAM MAXED OUT)", is_boss_win=(self.current_phase == "BOSS"))
                 elif cpu > cfg.get("cpu_max", 9999):
-                    if self.current_phase == "HERO":
-                        self.trigger_failure("SYSTEM OVERLOAD: CPU MAXED OUT")
-                    else: # BOSS PHA: Quá tải CPU nghĩa là Boss thắng!
-                        print("💀 GHOST HERO QUÁ TẢI CPU! BOSS WIN.")
-                        self.trigger_success()
+                    self.trigger_death("SYSTEM OVERLOAD: TỔN THƯƠNG TRÍ LỰC (CPU MAXED OUT)", is_boss_win=(self.current_phase == "BOSS"))
 
         return False
 
@@ -95,7 +107,6 @@ class PhaseManager:
         if self.state in ["EXECUTING", "MOVING", "PAUSED"] and ui_algo_state == "IDLE":
             self.set_state("PREPARING")
 
-        # [ĐÃ SỬA]: Ghi nhớ trạng thái trước khi Pause để chống kẹt
         if self.state in ["EXECUTING", "MOVING"] and ui_algo_state == "PAUSED":
             self._was_executing = (self.state == "EXECUTING")
             self.state = "PAUSED"

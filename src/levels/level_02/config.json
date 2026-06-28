@@ -1,0 +1,15 @@
+{
+  "id": 2,
+  "name": "LEVEL 2: TRÍ TUỆ NHÂN TẠO",
+  "desc": "Informed Search (Sử dụng Heuristic và Trọng số)",
+  "algorithms": ["BFS", "DFS","GREEDY", "ASTAR", "BIDIRECTIONAL", "IDASTAR"],
+  "unlocked_traps": ["WALL"],
+  "max_rounds": 3,
+  "retries": 1,
+  "ram_max": 180,
+  "cpu_max": 480,
+  "max_cost": 110,
+  "maps": [
+    {"name": "Đầm lầy chết chóc", "file": "assets/maps/dungeon_map_2.tmx"}
+  ]
+}

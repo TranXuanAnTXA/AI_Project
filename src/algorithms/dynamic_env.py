@@ -1,88 +1,134 @@
-"""Advanced algorithms (Dành riêng cho nhánh hoang_anh để vẽ UI)."""
-
+"""
+📄 src/algorithms/dynamic_env.py
+* Cập nhật: Fix tương thích hoàn toàn với SimulationManager.
+* LRTA* trả về lộ trình tích lũy (actual_path).
+* AND-OR trả về kịch bản lý tưởng (happy_path).
+"""
 import math
-from src.algorithms.common import Grid, Coordinate, validate_grid, iter_neighbors, reconstruct_path
+import random
+from src.algorithms.common import Grid, Coordinate, validate_grid, iter_neighbors
 
 def manhattan(a: Coordinate, b: Coordinate) -> float:
-    """Hàm tính khoảng cách heuristic (Manhattan)."""
     return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 # ==========================================
 # 1. LEARNING REAL-TIME A* (LRTA*)
 # ==========================================
 def lrta_star_generator(grid: Grid, start: Coordinate, goal: Coordinate, heuristic_fn=manhattan):
-    """
-    Thuật toán LRTA* dạng Generator.
-    Mỗi lần yield, thuật toán sẽ nhả ra vị trí hiện tại của Agent sau khi nó 'bước' 1 bước.
-    """
     validate_grid(grid)
-
-    # Bảng trí nhớ (Memory Table) lưu trữ kinh nghiệm của AI
     h_table: dict[Coordinate, float] = {}
+    visit_count: dict[Coordinate, int] = {} # [MỚI] Bộ đếm số lần giẫm lên 1 ô
 
     def get_h(node: Coordinate) -> float:
-        """Lấy Heuristic từ bộ nhớ, nếu chưa có thì tính mới."""
         if node not in h_table:
             h_table[node] = float(heuristic_fn(node, goal))
         return h_table[node]
 
     current = start
     visited = {current}
-
-    # Ở LRTA*, đường đi là toàn bộ dấu chân đã bước (có thể ngoằn ngoèo, lặp lại)
     actual_path = [current]
+    metrics = {current: {'h': get_h(current)}}
 
-    max_steps = 2000 # Cầu chì an toàn chống lặp vô tận nếu bị nhốt
-    step = 0
+    while current != goal:
+        # Ghi nhận Hero vừa đứng ở ô này thêm 1 lần
+        visit_count[current] = visit_count.get(current, 0) + 1
 
-    while current != goal and step < max_steps:
-        step += 1
-
-        # Nhìn ra xung quanh
         neighbors = list(iter_neighbors(grid, current))
-
         if not neighbors:
-            break  # Kẹt cứng hoàn toàn
+            yield current, visited, [], None, metrics
+            break
 
-        # Tìm ô láng giềng tốt nhất
+        best_neighbors = []
         min_f = math.inf
-        best_neighbor = None
 
         for neighbor in neighbors:
-            # f(n) = cost + h(n). Giả sử chi phí di chuyển là 1.0
-            f_value = 1.0 + get_h(neighbor)
-            if f_value < min_f:
-                min_f = f_value
-                best_neighbor = neighbor
+            if neighbor == goal:
+                cost = 1.0
+            else:
+                cost = float(grid[neighbor[1]][neighbor[0]]) if grid[neighbor[1]][neighbor[0]] > 0 else 1.0
 
-        # BƯỚC HỌC TẬP (Cập nhật trí nhớ): Cập nhật lại độ khó của ô đang đứng
+            # [QUAN TRỌNG] Phạt nặng những ô đã đi qua nhiều lần (chống đi vòng tròn)
+            penalty = visit_count.get(neighbor, 0) * 2.0
+            f = cost + get_h(neighbor) + penalty
+
+            # Xử lý sai số float và gom các ô có F tốt ngang nhau vào 1 mảng
+            if f < min_f - 0.0001:
+                min_f = f
+                best_neighbors = [neighbor]
+            elif abs(f - min_f) <= 0.0001:
+                best_neighbors.append(neighbor)
+
+        # [MỚI] Bốc thăm ngẫu nhiên nếu có nhiều ô điểm tốt ngang nhau
+        if best_neighbors:
+            best_neighbor = random.choice(best_neighbors)
+        else:
+            break
+
+            # Cập nhật trí nhớ (Học)
         h_table[current] = max(get_h(current), min_f)
 
-        # BƯỚC DI CHUYỂN
         current = best_neighbor
         visited.add(current)
         actual_path.append(current)
 
-        # Trả về UI trạng thái hiện tại để vẽ
-        yield current, visited, neighbors, None
+        metrics[current] = {'h': get_h(current)}
 
-    # Kết thúc vòng lặp
-    if current == goal:
-        yield current, visited, [], actual_path
-    else:
-        yield current, visited, [], []  # Thất bại (hết số bước hoặc kẹt)
+        yield current, visited, neighbors, None, metrics
+
+    yield current, visited, [], actual_path, metrics
 
 
 # ==========================================
-# 2. AND-OR SEARCH (Placeholder Generator)
+# 2. AND-OR GRAPH SEARCH
 # ==========================================
 def and_or_generator(grid: Grid, start: Coordinate, goal: Coordinate):
-    """
-    AND-OR Search trả về Policy thay vì Path, rất khó để visualize từng bước.
-    Đây là hàm giữ chỗ (stub) để không bị lỗi UI.
-    """
     validate_grid(grid)
-    visited = {start}
+    visited_nodes = {start}
 
-    # Chỉ nhả ra 1 frame duy nhất báo lỗi hoặc chưa hỗ trợ vẽ
-    yield start, visited, [], None
+    def get_outcomes(state: Coordinate, action_target: Coordinate):
+        """Giả lập môi trường rủi ro: Nếu ô kế là băng (3), có khả năng bị trượt ra xung quanh"""
+        outcomes = [action_target]
+        cell_val = grid[action_target[1]][action_target[0]]
+        if cell_val == 3:
+            for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                nx, ny = action_target[0] + dx, action_target[1] + dy
+                if 0 <= ny < len(grid) and 0 <= nx < len(grid[0]) and grid[ny][nx] != 1:
+                    outcomes.append((nx, ny))
+        return outcomes
+
+    def or_search(state: Coordinate, path: list):
+        visited_nodes.add(state)
+
+        # Nhả yield tĩnh để UI không bị đứng
+        yield state, visited_nodes, [state], None, {}
+
+        if state == goal:
+            return [state]
+        if state in path:
+            return None
+
+        for action_target in iter_neighbors(grid, state):
+            outcomes = get_outcomes(state, action_target)
+            plan = yield from and_search(outcomes, path + [state])
+
+            if plan is not None:
+                # Tìm được Happy Path -> Trả về mảng đường đi
+                return [state] + plan[action_target]
+        return None
+
+    def and_search(states: list, path: list):
+        conditional_plans = {}
+        for state in states:
+            plan = yield from or_search(state, path)
+            if plan is None:
+                return None # Rủi ro dẫn đến ngõ cụt -> Phá sản nhánh này
+            conditional_plans[state] = plan
+        return conditional_plans
+
+    # [MỚI]: Nhả frame giả đầu tiên để tránh lỗi "Vét cạn bản đồ"
+    yield start, visited_nodes, [start], None, {}
+
+    happy_path = yield from or_search(start, [])
+
+    # Kết thúc: Nhả ra con đường an toàn nhất
+    yield start, visited_nodes, [], happy_path, {}

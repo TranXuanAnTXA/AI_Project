@@ -1,6 +1,6 @@
 """
 📄 Tên File: dashboard.py (Nằm trong src/ui/components/)
-* Vai trò: Layout L-Shape, điều phối Theme, cụm nút, tốc độ, danh sách thuật toán/Map động và Timer.
+* Cập nhật: Thêm thanh Thể lực (Stamina) cho Level 2+, đổi tên các thanh RAM/CPU theo phong cách Hầm Ngục.
 """
 import pygame
 import math
@@ -31,8 +31,13 @@ class Dashboard:
         # --- LINH KIỆN RIGHT PANEL (HERO PHASE) ---
         bar_x = self.right_panel_rect.x + 20
         bar_y_start = self.right_panel_rect.y + 110
-        self.ram_bar = UIProgressBar(bar_x, bar_y_start, self.right_panel_w - 40, 15, "RAM (Frontier)")
-        self.cpu_bar = UIProgressBar(bar_x, bar_y_start + 60, self.right_panel_w - 40, 15, "CPU (Expanded)")
+
+        # [ĐÃ SỬA]: Đổi tên theo concept Hầm Ngục (Dungeon Theme)
+        self.ram_bar = UIProgressBar(bar_x, bar_y_start, self.right_panel_w - 40, 15, "Nhãn Lực (Frontier)")
+        self.cpu_bar = UIProgressBar(bar_x, bar_y_start + 60, self.right_panel_w - 40, 15, "Trí Lực (Expanded)")
+
+        # [MỚI]: Thêm thanh Thể lực (Khoảng cách Y cách nhau 60px)
+        self.cost_bar = UIProgressBar(bar_x, bar_y_start + 120, self.right_panel_w - 40, 15, "Thể Lực (Stamina)")
 
         # --- LINH KIỆN BOTTOM BAR ---
         ctrl_x = self.bottom_bar_rect.x + 20
@@ -47,7 +52,7 @@ class Dashboard:
         for i in range(4):
             self.speed_rects.append(pygame.Rect(ctrl_x + i * 57, ctrl_y + 60, 50, 35))
 
-        # --- DỮ LIỆU ĐỘNG (Sẽ được nạp qua hàm refresh_algorithms) ---
+        # --- DỮ LIỆU ĐỘNG ---
         self.algorithms = []
         self.selected_algo = ""
         self.algo_start_idx = 0
@@ -71,18 +76,14 @@ class Dashboard:
         self.algo_card_gap = 15
         self.max_visible_algos = (self.algo_area_rect.width - 80) // (self.algo_card_w + self.algo_card_gap)
 
-        # Nạp dữ liệu lần đầu
         self.refresh_algorithms()
 
     def refresh_algorithms(self):
-        """Cập nhật lại danh sách Card thuật toán, bản đồ và bẫy khi chuyển Level"""
-        # 1. Làm mới thuật toán cho phe Hero
         self.algorithms = self.level_manager.get_unlocked_algorithms()
         if self.selected_algo not in self.algorithms:
             self.selected_algo = self.algorithms[0] if self.algorithms else ""
         self.algo_start_idx = 0
 
-        # 2. Làm mới bản đồ và bẫy rập cho phe Boss
         self.boss_maps = getattr(self.level_manager, "get_current_maps", lambda: [])()
         self.selected_map = self.boss_maps[0]["name"] if self.boss_maps else ""
         self.map_start_idx = 0
@@ -99,28 +100,23 @@ class Dashboard:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_pos = event.pos
 
-            # Nút Run/Stop
             if self.btn_main.collidepoint(mouse_pos):
                 if self.algo_state == "IDLE":
                     self.algo_state = "RUNNING"
                 else:
                     self.algo_state = "IDLE"
 
-            # Nút Pause/Resume
             elif self.algo_state != "IDLE" and self.btn_pause.collidepoint(mouse_pos):
                 if self.algo_state == "RUNNING":
                     self.algo_state = "PAUSED"
                 elif self.algo_state == "PAUSED":
                     self.algo_state = "RUNNING"
 
-            # Tốc độ
             for i, rect in enumerate(self.speed_rects):
                 if rect.collidepoint(mouse_pos):
                     self.current_speed = self.speeds[i]
 
-            # --- TÁCH LUỒNG CLICK CHO HERO & BOSS ---
             if self.current_phase == "HERO":
-                # Cuộn Thuật toán
                 if self.btn_scroll_left.collidepoint(mouse_pos) and self.algo_start_idx > 0:
                     self.algo_start_idx -= 1
                 elif self.btn_scroll_right.collidepoint(mouse_pos) and self.algo_start_idx < len(self.algorithms) - self.max_visible_algos:
@@ -134,16 +130,13 @@ class Dashboard:
                     card_rect = pygame.Rect(start_x + i * (self.algo_card_w + self.algo_card_gap), self.algo_area_rect.y + 10, self.algo_card_w, self.algo_card_h)
                     if card_rect.collidepoint(mouse_pos):
                         self.selected_algo = self.algorithms[idx]
-                        print(f">>> Đã chọn thuật toán: {self.selected_algo}")
 
             elif self.current_phase == "BOSS":
-                # Cuộn Map
                 if self.btn_scroll_left.collidepoint(mouse_pos) and self.map_start_idx > 0:
                     self.map_start_idx -= 1
                 elif self.btn_scroll_right.collidepoint(mouse_pos) and self.map_start_idx < len(self.boss_maps) - self.max_visible_algos:
                     self.map_start_idx += 1
 
-                # Click chọn Map
                 start_x = self.algo_area_rect.x + 50
                 for i in range(self.max_visible_algos):
                     idx = self.map_start_idx + i
@@ -152,17 +145,19 @@ class Dashboard:
                     card_rect = pygame.Rect(start_x + i * (self.algo_card_w + self.algo_card_gap), self.algo_area_rect.y + 10, self.algo_card_w, self.algo_card_h)
                     if card_rect.collidepoint(mouse_pos):
                         self.selected_map = self.boss_maps[idx]["name"]
-                        print(f">>> Boss chọn Map: {self.selected_map}")
 
-                # Boss click chọn Trap ở Right Panel
                 trap_rect = pygame.Rect(self.right_panel_rect.x + 20, self.right_panel_rect.y + 90, self.right_panel_rect.w - 40, 50)
                 if trap_rect.collidepoint(mouse_pos) and self.traps:
-                    print(f">>> Đã chọn công cụ: {self.selected_trap}")
+                    pass
 
     def update(self, time_delta, game_stats):
         if self.current_phase == "HERO":
             self.ram_bar.update_value(game_stats.get("ram", 0), game_stats.get("ram_max", 100))
             self.cpu_bar.update_value(game_stats.get("cpu", 0), game_stats.get("cpu_max", 500))
+
+            # [MỚI]: Chỉ cập nhật dữ liệu thanh Thể lực nếu ở Level 2 trở lên
+            if self.level_manager.current_level >= 2:
+                self.cost_bar.update_value(game_stats.get("cost", 0), game_stats.get("cost_max", 100))
 
     def _draw_glass_panel(self, surface, rect, palette):
         glass = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
@@ -195,16 +190,21 @@ class Dashboard:
         surface.blit(info_txt, (self.right_panel_rect.x + 20, self.right_panel_rect.y + 20))
 
         if self.current_phase == "HERO":
-            header_txt = UITheme.FONT_HEADER.render("RUNNER STATS", True, palette["text_header"])
+            # Đổi Title cho ngầu hơn
+            header_txt = UITheme.FONT_HEADER.render("CHỈ SỐ SINH TỒN", True, palette["text_header"])
             surface.blit(header_txt, (self.right_panel_rect.x + 20, self.right_panel_rect.y + 50))
+
             self.ram_bar.draw(surface, palette, UITheme.FONT_SMALL)
             self.cpu_bar.draw(surface, palette, UITheme.FONT_SMALL)
+
+            # [MỚI]: Vẽ thanh Thể Lực nếu ở Level 2 trở lên
+            if self.level_manager.current_level >= 2:
+                self.cost_bar.draw(surface, palette, UITheme.FONT_SMALL)
 
         elif self.current_phase == "BOSS":
             header_txt = UITheme.FONT_HEADER.render("ARCHITECT TOOLS", True, palette["text_header"])
             surface.blit(header_txt, (self.right_panel_rect.x + 20, self.right_panel_rect.y + 50))
 
-            # Box đặt Tường/Bẫy
             trap_rect = pygame.Rect(self.right_panel_rect.x + 20, self.right_panel_rect.y + 90, self.right_panel_rect.w - 40, 50)
             pygame.draw.rect(surface, palette["bar_fill"], trap_rect, border_radius=8)
             pygame.draw.rect(surface, palette["border"], trap_rect, 2, border_radius=8)
@@ -241,7 +241,7 @@ class Dashboard:
             speed_txt = UITheme.FONT_SMALL.render(f"{self.speeds[i]}x", True, text_color)
             surface.blit(speed_txt, (rect.centerx - speed_txt.get_width()//2, rect.centery - speed_txt.get_height()//2))
 
-        # --- GIAO DIỆN SCROLL CARD (DÙNG CHUNG CHO CẢ HERO VÀ BOSS) ---
+        # --- GIAO DIỆN SCROLL CARD ---
         pygame.draw.rect(surface, palette["btn_bg"], self.btn_scroll_left, border_radius=4)
         pygame.draw.rect(surface, palette["btn_bg"], self.btn_scroll_right, border_radius=4)
         left_arr = UITheme.FONT_TEXT.render("<", True, palette["text_normal"])
@@ -251,7 +251,6 @@ class Dashboard:
 
         start_x = self.algo_area_rect.x + 50
 
-        # Chọn data để render tùy vào Phase
         items_to_draw = self.algorithms if self.current_phase == "HERO" else [m["name"] for m in self.boss_maps]
         current_start_idx = self.algo_start_idx if self.current_phase == "HERO" else self.map_start_idx
         current_selected = self.selected_algo if self.current_phase == "HERO" else self.selected_map

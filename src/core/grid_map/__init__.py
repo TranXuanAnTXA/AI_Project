@@ -59,7 +59,6 @@ class GridMap:
         """LỚP 1: Sàn nhà, Cấu trúc tĩnh TMX, và CHÂN TƯỜNG Boss."""
         if camera_offset is None: camera_offset = pygame.Vector2(0, 0)
 
-        # 1. Vẽ toàn bộ map TMX gốc (Trừ Foreground)
         for layer_name in self.controller.layer_names:
             if layer_name == "Foreground": continue
 
@@ -75,9 +74,22 @@ class GridMap:
                     if gid != 0:
                         tile_surface = self.tile_engine.get_tile(gid)
                         if tile_surface:
-                            surface.blit(tile_surface, (pixel_x, pixel_y))
+                            # [MỚI]: Nhuộm màu dựa theo Tên Layer
+                            if layer_name == "Mud_floor":
+                                tint = pygame.Surface((self.tile_size, self.tile_size), pygame.SRCALPHA)
+                                tint.fill((101, 67, 33, 160)) # Nhuộm Bùn Nâu Mờ
+                                final_surface = tile_surface.copy()
+                                final_surface.blit(tint, (0, 0))
+                                surface.blit(final_surface, (pixel_x, pixel_y))
+                            elif layer_name == "Ice_floor":
+                                tint = pygame.Surface((self.tile_size, self.tile_size), pygame.SRCALPHA)
+                                tint.fill((150, 220, 255, 120)) # Nhuộm Xanh Băng Trơn
+                                final_surface = tile_surface.copy()
+                                final_surface.blit(tint, (0, 0))
+                                surface.blit(final_surface, (pixel_x, pixel_y))
+                            else:
+                                surface.blit(tile_surface, (pixel_x, pixel_y))
 
-        # 2. Vẽ Chân Tường Boss & Viền
         for y in range(self.height):
             for x in range(self.width):
                 is_boss = self.controller.boss_walls[y][x] == 1

@@ -1,6 +1,6 @@
 """
 📄 src/ui/scenes/game_scene/renderer.py
-* Cập nhật: Tích hợp Sandwich Rendering (Vẽ 3 lớp) để Hero đi vào sau mái nhà/bức tường.
+* Cập nhật: Vẽ lớp phủ Sương Mù (Fog) che khuất bản đồ.
 """
 import pygame
 import random
@@ -64,14 +64,22 @@ class GameRenderer:
         scene = self.scene
         surface.fill((15, 15, 18))
 
-        # 1. TẠO BẢNG VẼ ĐỘNG
         world_surface = pygame.Surface((scene.map_pixel_w, scene.map_pixel_h))
         world_surface.fill((30, 30, 35))
 
-        # 2. VẼ LỚP DƯỚI (SANDWICH LỚP 1: Sàn nhà, Vật cản tĩnh, Chân tường)
         scene.game_map.render_bottom(world_surface)
 
-        # 3. VẼ LỚP GIỮA (SANDWICH LỚP 2: Goal, Nhân vật, SimManager, Hover)
+        # [MỚI]: VẼ HIỆU ỨNG SƯƠNG MÙ CHÈN LÊN SÀN
+        grid = scene.game_map.grid
+        for r in range(len(grid)):
+            for c in range(len(grid[0])):
+                if grid[r][c] == 4: # ID của Sương Mù
+                    fog_surf = pygame.Surface((scene.tile_size, scene.tile_size), pygame.SRCALPHA)
+                    fog_surf.fill((60, 65, 75, 220)) # Màu xám đen, độ trong suốt 220/255
+                    pygame.draw.line(fog_surf, (100, 105, 115, 100), (0, 10), (scene.tile_size, 15), 2)
+                    pygame.draw.line(fog_surf, (100, 105, 115, 100), (0, 25), (scene.tile_size, 20), 2)
+                    world_surface.blit(fog_surf, (c * scene.tile_size, r * scene.tile_size))
+
         if scene.phase_manager.state in ["EXECUTING", "MOVING", "PAUSED", "REWINDING"]:
             scene.sim_manager.draw(world_surface)
 
@@ -81,17 +89,14 @@ class GameRenderer:
         scene.hero.draw(world_surface, offset_x=0, offset_y=0)
         self.draw_hover_preview(world_surface)
 
-        # 4. VẼ LỚP TRÊN CÙNG (SANDWICH LỚP 3: Mái nhà, Cây cối lơ lửng đè lên Hero)
         scene.game_map.render_top(world_surface)
 
-        # 5. VẼ HIỆU ỨNG KHÓI
         self.update_particles()
         for p in self.particles:
             temp_surf = pygame.Surface((int(p['radius']*2), int(p['radius']*2)), pygame.SRCALPHA)
             pygame.draw.circle(temp_surf, (*p['color'], max(0, p['life'])), (int(p['radius']), int(p['radius'])), int(p['radius']))
             world_surface.blit(temp_surf, (p['x'] - p['radius'], p['y'] - p['radius']))
 
-        # Camera & Transform (Giữ nguyên)
         zoom = getattr(scene.camera, 'zoom', getattr(scene.camera, 'current_zoom', 1.0))
         scaled_w = int(scene.map_pixel_w * zoom)
         scaled_h = int(scene.map_pixel_h * zoom)

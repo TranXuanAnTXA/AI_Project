@@ -1,0 +1,25 @@
+{
+  "id": 4,
+  "name": "LEVEL 4: THỬ THÁCH TỐI THƯỢNG",
+  "desc": "Lăng Mộ Hỗn Mang",
+  "algorithms": [
+    "LRTA_STAR",
+    "AND_OR",
+    "BFS",
+    "DFS",
+    "ASTAR",
+    "GREEDY",
+    "SIMULATED_ANNEALING",
+    "LOCAL_BEAM"
+  ],
+  "unlocked_traps": ["WALL", "MUD", "ICE"],
+  "max_rounds": 3,
+  "retries": 1,
+  "ram_max": 250,
+  "cpu_max": 400,
+  "max_cost": 100,
+  "maps": [
+    {"name": "Vực Thẳm Phán Xét", "file": "assets/maps/dungeon_map_4.tmx"},
+    {"name": "Lăng Mộ Hỗn Mang", "file": "assets/maps/dungeon_map_final_2.tmx"}
+  ]
+}

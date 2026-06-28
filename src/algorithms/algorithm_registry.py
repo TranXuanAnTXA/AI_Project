@@ -5,6 +5,7 @@
 from src.algorithms.uninformed import bfs_generator, dfs_generator
 from src.algorithms.informed import astar_generator, greedy_generator, bidirectional_generator, idastar_generator
 from src.algorithms.local_search import hill_climbing, local_beam_search, simulated_annealing
+from src.algorithms.dynamic_env import lrta_star_generator, and_or_generator
 
 ALGORITHM_REGISTRY = {
     # LEVEL 1: Uninformed Search
@@ -20,7 +21,11 @@ ALGORITHM_REGISTRY = {
     # LEVEL 3: Local Search
     "HILL_CLIMBING": hill_climbing,
     "SIMULATED_ANNEALING": simulated_annealing,
-    "LOCAL_BEAM": local_beam_search
+    "LOCAL_BEAM": local_beam_search,
+
+    #lv4: dynamic_env
+    "LRTA_STAR": lrta_star_generator,
+    "AND_OR": and_or_generator
 }
 
 def get_algorithm(name: str):
