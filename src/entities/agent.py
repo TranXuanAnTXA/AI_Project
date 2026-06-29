@@ -67,6 +67,8 @@ class Agent:
         self.teleport_delay = 1.0
         self.pending_teleport_target = None
 
+        self.is_ghost = False
+
     def _load_all_animations(self, config: dict) -> dict:
         all_anims = {}
         for state, details in config.items():
@@ -327,5 +329,20 @@ class Agent:
 
         rect = self.image.get_rect(center=(center_x, center_y))
         rect.y -= 8
-        surface.blit(self.image, rect)
+
+        # [ĐÃ SỬA] Hiệu ứng Bóng ma (Ghost) cho Hero 2
+        if self.is_ghost:
+            ghost_image = self.image.copy()
+            # Cách 1: Làm mờ (Opacity)
+            #ghost_image.set_alpha(150)
+
+            # Cách 2: Phủ thêm một lớp màu đỏ nhạt/xanh nhạt để phân biệt (Tùy chọn)
+            overlay = pygame.Surface(ghost_image.get_size(), pygame.SRCALPHA)
+            overlay.fill((255, 50, 50, 100)) # Phủ màu đỏ mờ
+            ghost_image.blit(overlay, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+            surface.blit(ghost_image, rect)
+        else:
+            surface.blit(self.image, rect)
+
         self.debuffs.draw_effects(surface, offset_x, offset_y)

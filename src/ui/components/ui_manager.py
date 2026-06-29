@@ -6,6 +6,7 @@ from src.ui.overlays.settings_overlay import SettingsOverlay
 from src.ui.overlays.fly_notification import FlyNotification
 from src.ui.overlays.failure_overlay import FailureOverlay
 from src.ui.overlays.victory_overlay import VictoryOverlay
+from src.ui.overlays.vs_overlay import VSOverlay
 
 class UIManager:
     def __init__(self, scene):
@@ -17,6 +18,7 @@ class UIManager:
         )
         self.fly_notify = FlyNotification(scene.screen_w, scene.screen_h)
         self.failure_overlay = FailureOverlay(scene.screen_w, scene.screen_h)
+        self.vs_overlay = VSOverlay(scene)
 
     def process_event(self, event):
         """Trả về True nếu UI đã tiêu thụ event và cần block các thao tác click khác của Game."""

@@ -7,7 +7,7 @@ import pygame
 class CameraController:
     def __init__(self, camera):
         self.camera = camera
-        self.timer = 1.0 # Đồng hồ đếm trễ 1 giây (chuyển từ main.py sang)
+        self.timer = 1.0 # Đồng hồ đếm trễ 1 giây
         self.local_search_algos = ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM"]
 
     def reset_to_hero(self, hero, view_h, tile_size):
@@ -22,7 +22,7 @@ class CameraController:
         else:
             self.camera.update(init_x, init_y - offset_y)
 
-    def update_cinematic(self, time_delta, current_speed, phase, state, selected_algo, visited_nodes, hero, view_h, tile_size, boss=None):
+    def update_cinematic(self, time_delta, current_speed, phase, state, selected_algo, visited_nodes, hero, view_h, tile_size, boss=None, hero_2=None, is_vs_mode=False):
         """Xử lý logic theo dõi Hero & Boss (Cinematic) hoặc nhìn toàn cảnh (Phase Boss)."""
 
         # [MỚI]: Nếu là Phase Boss -> Zoom toàn bản đồ
@@ -30,7 +30,16 @@ class CameraController:
             if hasattr(self.camera, 'zoom_to_fit'):
                 self.camera.zoom_to_fit()
 
-        # Nếu là Phase Hero
+        # [MỚI]: Chế độ VS Mode (Theo dõi 2 Hero thi đấu)
+        elif phase == "HERO" and is_vs_mode and hero_2:
+            self.timer += time_delta * current_speed
+            if self.timer >= 1.0:
+                self.timer = 0.0
+                if hasattr(self.camera, 'focus_on_entities'):
+                    # Dùng chung hàm focus bao quát nhưng căn chỉnh mượt hơn
+                    self.camera.focus_on_entities(hero, hero_2, padding=200, max_zoom=1.0)
+
+        # Nếu là Phase Hero Bình thường (Luồng 1 mình)
         elif phase == "HERO" and state not in ["PREPARING", "ANNOUNCING", "LEVEL_COMPLETE"]:
 
             # 1. Nếu là BFS/A* đang chạy tìm đường -> Focus lấy toàn bộ Area quét
@@ -43,9 +52,9 @@ class CameraController:
                 if self.timer >= 1.0:
                     self.timer = 0.0 # Reset đồng hồ
 
-                    # [MỚI]: Nếu có Boss -> Bao quát cả Hero và Boss
+                    # Nếu có Boss -> Bao quát cả Hero và Boss
                     if boss and hasattr(self.camera, 'focus_on_entities'):
-                        self.camera.focus_on_entities(hero, boss, padding=250)
+                        self.camera.focus_on_entities(hero, boss, padding=350, max_zoom=1.0)
                     # Nếu KHÔNG có Boss -> Bám theo Hero như cũ
                     else:
                         hero_x = hero.pixel_pos[0] + tile_size // 2

@@ -42,11 +42,11 @@ class Dashboard:
 
         # --- LINH KIỆN RIGHT PANEL ---
         bar_x = self.right_top_rect.x + 20
-        # [ĐÃ SỬA]: Đẩy tọa độ bar xuống dưới 45px để dành khoảng trống 20px cho chữ
-        bar_y_start = self.right_top_rect.y + 45
+
+        # [ĐÃ SỬA] Đẩy tụt thanh Bar xuống 70 pixel để nhường chỗ cho Text AI và Nút bấm
+        bar_y_start = self.right_top_rect.y + 70
 
         self.ram_bar = UIProgressBar(bar_x, bar_y_start, self.right_panel_w - 40, 15, "Nhãn Lực (Frontier)")
-        # Giãn cách giữa các bar cũng được nới rộng ra cho đẹp mắt (cách nhau 65px)
         self.cpu_bar = UIProgressBar(bar_x, bar_y_start + 65, self.right_panel_w - 40, 15, "Trí Lực (Expanded)")
         self.cost_bar = UIProgressBar(bar_x, bar_y_start + 130, self.right_panel_w - 40, 15, "Thể Lực (Stamina)")
 
@@ -74,7 +74,17 @@ class Dashboard:
         self.active_group_name = ""
         self.algorithms_in_group = []
 
-        self.selected_algo = ""
+        # [MỚI] Dành cho Chế độ Song Song (VS Mode)
+        self.selected_algo_1 = ""
+        self.selected_algo_2 = ""
+        self.active_algo_slot = 1  # Đánh dấu đang chọn AI cho Slot nào (1 hoặc 2)
+        self.is_vs_mode = False
+
+        # Nút UI để chọn AI cho từng Slot
+        self.btn_select_ai_1 = pygame.Rect(self.right_top_rect.x + 220, self.right_top_rect.y + 15, 75, 25)
+        self.btn_select_ai_2 = pygame.Rect(self.right_bot_rect.x + 220, self.right_bot_rect.y + 15, 75, 25)
+        self.btn_toggle_vs = pygame.Rect(self.right_bot_rect.centerx - 70, self.right_bot_rect.centery - 20, 140, 40)
+
         self.algo_start_idx = 0
 
         self.boss_maps = []
@@ -107,6 +117,15 @@ class Dashboard:
         if self.max_visible_algos < 1: self.max_visible_algos = 1
 
         self.refresh_algorithms()
+
+    @property
+    def selected_algo(self):
+        """Giữ tương thích ngược cho code cũ (Phase 2, main.py). Mặc định trả về AI của Slot 1"""
+        return self.selected_algo_1
+
+    @selected_algo.setter
+    def selected_algo(self, value):
+        self.selected_algo_1 = value
 
     def refresh_algorithms(self):
         cfg = self.level_manager.get_current_config()
@@ -183,18 +202,37 @@ class Dashboard:
                     self.current_speed = self.speeds[i]
 
             if self.current_phase == "HERO":
+                # [MỚI] Logic Click nút chọn Slot và Bật/Tắt VS Mode
+                if self.btn_select_ai_1.collidepoint(mouse_pos):
+                    self.active_algo_slot = 1
+
+                if not self.is_vs_mode and self.btn_toggle_vs.collidepoint(mouse_pos):
+                    self.is_vs_mode = True
+                    self.active_algo_slot = 2 # Tự động chuyển focus sang chọn AI cho Slot 2
+                elif self.is_vs_mode and self.btn_select_ai_2.collidepoint(mouse_pos):
+                    self.active_algo_slot = 2
+
+                # Xử lý cuộn thẻ AI (Giữ nguyên cũ)
                 if self.btn_scroll_left.collidepoint(mouse_pos) and self.algo_start_idx > 0:
                     self.algo_start_idx -= 1
                 elif self.btn_scroll_right.collidepoint(mouse_pos) and self.algo_start_idx < len(self.algorithms_in_group) - self.max_visible_algos:
                     self.algo_start_idx += 1
 
+                # [ĐÃ SỬA] Khi Click vào một Thẻ Thuật Toán ở dưới đáy
                 start_x = self.algo_area_rect.x + 50
                 for i in range(self.max_visible_algos):
                     idx = self.algo_start_idx + i
                     if idx >= len(self.algorithms_in_group): break
                     card_rect = pygame.Rect(start_x + i * (self.algo_card_w + self.algo_card_gap), self.algo_area_rect.y + 5, self.algo_card_w, self.algo_card_h)
+
                     if card_rect.collidepoint(mouse_pos):
-                        self.selected_algo = self.algorithms_in_group[idx]
+                        # Gán thuật toán dựa trên Slot đang active
+                        if self.active_algo_slot == 1:
+                            self.selected_algo_1 = self.algorithms_in_group[idx]
+                        else:
+                            self.selected_algo_2 = self.algorithms_in_group[idx]
+
+
 
             elif self.current_phase == "BOSS":
                 if self.btn_scroll_left.collidepoint(mouse_pos) and self.map_start_idx > 0:
@@ -229,6 +267,12 @@ class Dashboard:
 
             if self.level_manager.current_level >= 2:
                 self.cost_bar.update_value(game_stats.get("cost", 0), game_stats.get("cost_max", 100))
+
+            if getattr(self, 'is_vs_mode', False):
+                self.ghost_ram_bar.update_value(game_stats.get("hero2_ram", 0), game_stats.get("ram_max", 100))
+                self.ghost_cpu_bar.update_value(game_stats.get("hero2_cpu", 0), game_stats.get("cpu_max", 500))
+                if self.level_manager.current_level >= 2:
+                    self.ghost_cost_bar.update_value(game_stats.get("hero2_cost", 0), game_stats.get("cost_max", 100))
 
         elif self.current_phase == "BOSS":
             # Ghost Hero nhận dữ liệu giống hệt Hero vì adversarial_scene trả về cùng bộ key
@@ -301,12 +345,51 @@ class Dashboard:
         self._draw_fading_line(surface, line_x, self.right_header_rect.bottom, line_width, palette["border"])
 
         if self.current_phase == "HERO":
+            # ==========================================
+            # SLOT 1: HERO 1
+            # ==========================================
+            algo_txt_1 = UITheme.FONT_TEXT.render(f"AI: {self.selected_algo_1}", True, palette["text_normal"])
+            surface.blit(algo_txt_1, (self.right_top_rect.x + 20, self.right_top_rect.y + 15))
+
+            # Nút [CHỌN] cho Slot 1
+            btn_color_1 = (50, 150, 255) if self.active_algo_slot == 1 else palette["btn_bg"]
+            pygame.draw.rect(surface, btn_color_1, self.btn_select_ai_1, border_radius=4)
+            pygame.draw.rect(surface, palette["border"], self.btn_select_ai_1, 1, border_radius=4)
+            btn_txt_1 = UITheme.FONT_SMALL.render("ĐANG CHỌN" if self.active_algo_slot == 1 else "CHỌN", True, (255, 255, 255))
+            surface.blit(btn_txt_1, (self.btn_select_ai_1.centerx - btn_txt_1.get_width()//2, self.btn_select_ai_1.centery - btn_txt_1.get_height()//2))
+
             self.ram_bar.draw(surface, palette, UITheme.FONT_SMALL)
             self.cpu_bar.draw(surface, palette, UITheme.FONT_SMALL)
             if self.level_manager.current_level >= 2:
                 self.cost_bar.draw(surface, palette, UITheme.FONT_SMALL)
-            placeholder_txt = UITheme.FONT_SMALL.render("[ Slot Song Song - Khóa ]", True, (100, 110, 120))
-            surface.blit(placeholder_txt, (self.right_bot_rect.centerx - placeholder_txt.get_width()//2, self.right_bot_rect.centery - placeholder_txt.get_height()//2))
+
+            # ==========================================
+            # SLOT 2: HERO 2 (VS MODE)
+            # ==========================================
+            if not self.is_vs_mode:
+                # Trạng thái KHÓA: Hiển thị nút bật VS Mode to ở giữa Slot 2
+                pygame.draw.rect(surface, (100, 30, 30, 200), self.btn_toggle_vs, border_radius=8)
+                pygame.draw.rect(surface, (255, 50, 50), self.btn_toggle_vs, 2, border_radius=8)
+                vs_txt = UITheme.FONT_TEXT.render("BẬT VS MODE", True, (255, 255, 255))
+                surface.blit(vs_txt, (self.btn_toggle_vs.centerx - vs_txt.get_width()//2, self.btn_toggle_vs.centery - vs_txt.get_height()//2))
+            else:
+                # Trạng thái MỞ: Hiển thị thanh trạng thái và AI như Slot 1
+                algo_txt_2 = UITheme.FONT_TEXT.render(f"AI: {self.selected_algo_2}", True, palette["text_normal"])
+                # Dùng lại tọa độ Y giống bên Boss để thẳng hàng
+                surface.blit(algo_txt_2, (self.right_bot_rect.x + 20, self.right_bot_rect.y + 15))
+
+                # Nút [CHỌN] cho Slot 2
+                btn_color_2 = (255, 50, 50) if self.active_algo_slot == 2 else palette["btn_bg"]
+                pygame.draw.rect(surface, btn_color_2, self.btn_select_ai_2, border_radius=4)
+                pygame.draw.rect(surface, palette["border"], self.btn_select_ai_2, 1, border_radius=4)
+                btn_txt_2 = UITheme.FONT_SMALL.render("ĐANG CHỌN" if self.active_algo_slot == 2 else "CHỌN", True, (255, 255, 255))
+                surface.blit(btn_txt_2, (self.btn_select_ai_2.centerx - btn_txt_2.get_width()//2, self.btn_select_ai_2.centery - btn_txt_2.get_height()//2))
+
+                # Dùng thanh bar của Ghost cho Hero 2
+                self.ghost_ram_bar.draw(surface, palette, UITheme.FONT_SMALL)
+                self.ghost_cpu_bar.draw(surface, palette, UITheme.FONT_SMALL)
+                if self.level_manager.current_level >= 2:
+                    self.ghost_cost_bar.draw(surface, palette, UITheme.FONT_SMALL)
 
         elif self.current_phase == "BOSS":
             # ==========================================
@@ -392,7 +475,7 @@ class Dashboard:
         start_x = self.algo_area_rect.x + 50
         items_to_draw = self.algorithms_in_group if self.current_phase == "HERO" else [m["name"] for m in self.boss_maps]
         current_start_idx = self.algo_start_idx if self.current_phase == "HERO" else self.map_start_idx
-        current_selected = self.selected_algo if self.current_phase == "HERO" else self.selected_map
+        current_selected = getattr(self, f"selected_algo_{self.active_algo_slot}") if self.current_phase == "HERO" else self.selected_map
 
         for i in range(self.max_visible_algos):
             idx = current_start_idx + i

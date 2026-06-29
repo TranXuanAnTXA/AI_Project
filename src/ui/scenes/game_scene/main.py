@@ -61,6 +61,21 @@ class GameScene(BaseScene):
         self.trap_resurrects = 3
         self.hero_last_pos = tuple(self.start_spawn)
 
+        # ====================================================
+        # [MỚI] KHỞI TẠO HERO 2 & SIMULATION 2 CHO VS MODE
+        # ====================================================
+        self.hero_2 = Agent(self.start_spawn[0], self.start_spawn[1], self.tile_size, sprite_configs)
+        self.hero_2.is_ghost = True  # Kích hoạt hiệu ứng bóng mờ trong agent.py
+        self.hero_2.teleport_effect_callback = lambda gx, gy: self.renderer.spawn_particles(gx, gy, (50, 150, 255)) # Hạt dịch chuyển màu xanh dương
+
+        self.sim_manager_2 = SimulationManager(self.tile_size)
+        self.hero_2_current_cost = 0
+        self.hero_2_last_pos = tuple(self.start_spawn)
+
+        self.sim_speed_counter_2 = 0
+        self.hero1_status = "SEARCHING" # SEARCHING, MOVING, REACHED, FAILED, DEAD
+        self.hero2_status = "SEARCHING"
+
         self.camera = Camera(self.view_w, self.view_h, self.map_pixel_w, self.map_pixel_h)
         self.cam_controller = CameraController(self.camera)
         self._reset_camera_to_hero()
@@ -93,6 +108,136 @@ class GameScene(BaseScene):
         algo_func = get_algorithm(self.dashboard.selected_algo)
         self.sim_manager.start(algo_func, self.game_map.grid, (self.hero.grid_pos[1], self.hero.grid_pos[0]), (self.goal_pos[1], self.goal_pos[0]))
 
+        if self.dashboard.is_vs_mode and hasattr(self, 'hero_2'):
+            self.hero_2.is_dead = False
+            self.hero_2.state = "idle"
+            self.hero_2.reset_movement()
+            algo_func_2 = get_algorithm(self.dashboard.selected_algo_2)
+            self.sim_manager_2.start(algo_func_2, self.game_map.grid, (self.hero_2.grid_pos[1], self.hero_2.grid_pos[0]), (self.goal_pos[1], self.goal_pos[0]))
+
+        if getattr(self.dashboard, 'is_vs_mode', False) and hasattr(self, 'hero_2'):
+            self.hero_2.is_dead = False
+            self.hero_2.state = "idle"
+            self.hero_2.reset_movement()
+            algo_func_2 = get_algorithm(self.dashboard.selected_algo_2)
+            self.sim_manager_2.start(algo_func_2, self.game_map.grid, (self.hero_2.grid_pos[1], self.hero_2.grid_pos[0]), (self.goal_pos[1], self.goal_pos[0]))
+
+        # [MỚI ĐƯỢC THÊM]: Reset cờ trạng thái VS Mode
+        self.hero1_status = "SEARCHING"
+        self.hero2_status = "SEARCHING"
+        self.sim_speed_counter_2 = 0
+
+    def _safe_process_execution(self, sim_manager, target_hero, algo_name):
+        """Môi trường Sandbox ảo: Cho AI tính toán đường đi mà không làm nhiễu State chung"""
+        orig_trigger_success = self.phase_manager.trigger_success
+        orig_trigger_failure = self.phase_manager.trigger_failure
+        orig_set_state = self.phase_manager.set_state
+        orig_hero = self.hero
+
+        # [SỬA LỖI LOCAL SEARCH]: Tạm thời đánh lừa Dashboard
+        orig_algo = self.dashboard.selected_algo_1
+        self.dashboard.selected_algo_1 = algo_name
+
+        outcome = "SEARCHING"
+
+        # Đánh lừa (Mock) các hàm thay đổi State
+        def mock_success(*args, **kwargs): nonlocal outcome; outcome = "REACHED"
+        def mock_failure(*args, **kwargs): nonlocal outcome; outcome = "FAILED"
+        def mock_set_state(new_state):
+            nonlocal outcome
+            if new_state == "MOVING" and outcome == "SEARCHING":
+                outcome = "MOVING"
+
+        self.phase_manager.trigger_success = mock_success
+        self.phase_manager.trigger_failure = mock_failure
+        self.phase_manager.set_state = mock_set_state
+        self.hero = target_hero
+
+        # Chạy logic thuật toán lõi
+        sim_manager.process_execution(self)
+
+        # Trả mọi thứ về nguyên bản
+        self.hero = orig_hero
+        self.phase_manager.trigger_success = orig_trigger_success
+        self.phase_manager.trigger_failure = orig_trigger_failure
+        self.phase_manager.set_state = orig_set_state
+
+        self.dashboard.selected_algo_1 = orig_algo
+        return outcome
+
+    def _update_hero_movement(self, target_hero, target_id, time_delta):
+        """Xử lý vật lý và va chạm bẫy độc lập cho từng Hero"""
+        target_hero.update(time_delta, self.dashboard.current_speed)
+
+        # Lấy tên thuật toán hiện tại của Slot đang chạy
+        algo = self.dashboard.selected_algo_1 if target_id == 1 else self.dashboard.selected_algo_2
+
+        if not getattr(target_hero, 'is_resurrecting', False):
+            last_pos = self.hero_last_pos if target_id == 1 else self.hero_2_last_pos
+            if not target_hero.is_dead and tuple(target_hero.grid_pos) != last_pos:
+
+                # --- THỦ THUẬT TRÁO ĐỔI (ĐÃ FIX LỖI THỂ LỰC & HỒI SINH) ---
+                orig_hero = self.hero
+                orig_cost_1 = self.hero_current_cost
+                orig_resurrects = self.trap_resurrects
+
+                # 1. Tước quyền hồi sinh nếu không phải thuật toán học (LRTA*)
+                if algo != "LRTA_STAR":
+                    self.trap_resurrects = 0
+
+                # 2. Đổi danh tính và túi tiền
+                self.hero = target_hero
+                self.hero_current_cost = orig_cost_1 if target_id == 1 else self.hero_2_current_cost
+
+                # 3. Kích hoạt Bẫy
+                if HazardManager.process_hero_tile(self, target_hero.grid_pos):
+                    if target_id == 1: self.hero_last_pos = tuple(target_hero.grid_pos)
+                    else: self.hero_2_last_pos = tuple(target_hero.grid_pos)
+
+                # 4. Trừ tiền đúng người
+                if target_id == 1:
+                    new_cost_1 = self.hero_current_cost
+                else:
+                    self.hero_2_current_cost = self.hero_current_cost
+                    new_cost_1 = orig_cost_1 # Hero 1 không bị trừ tiền oan
+
+                # 5. Trả lại toàn bộ trạng thái gốc
+                self.trap_resurrects = orig_resurrects
+                self.hero_current_cost = new_cost_1
+                self.hero = orig_hero
+                # ------------------------------------------------------------
+
+        if target_hero.is_dead:
+            return "DEAD"
+
+        elif getattr(target_hero, 'just_finished_slip', False):
+            if not target_hero.is_moving:
+                target_hero.just_finished_slip = False
+
+                # ========================================================
+                # [ĐÃ SỬA LỖI TRƯỢT BĂNG VS MODE]: Reset lại não của AI
+                # ========================================================
+                algo_func = get_algorithm(algo)
+                sim_mgr = self.sim_manager if target_id == 1 else self.sim_manager_2
+
+                # Bắt AI xóa dữ liệu cũ, nạp lại lưới từ tọa độ hiện tại
+                sim_mgr.start(algo_func, self.game_map.grid, (target_hero.grid_pos[1], target_hero.grid_pos[0]), (self.goal_pos[1], self.goal_pos[0]))
+
+                # Reset bộ đếm tốc độ quét để không bị giật cục
+                if target_id == 1: self.sim_speed_counter = 0
+                else: self.sim_speed_counter_2 = 0
+
+                return "SEARCHING"
+
+        elif tuple(target_hero.grid_pos) == self.goal_pos and not target_hero.is_moving and not getattr(target_hero, 'is_resurrecting', False):
+            return "REACHED"
+
+        elif not target_hero.is_moving and not getattr(target_hero, 'is_resurrecting', False):
+            if algo in ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR"]:
+                return "SEARCHING"
+
+        return "MOVING"
+
     def _reset_board_for_retry(self):
         self.hero.hard_reset(self.start_spawn[0], self.start_spawn[1])
         self.trap_resurrects = 3
@@ -102,6 +247,16 @@ class GameScene(BaseScene):
         self.sim_manager.frontier.clear()
         self.sim_manager.path.clear()
         self.sim_manager.history.clear()
+        self.sim_speed_counter = 0
+        self._reset_camera_to_hero()
+        if hasattr(self, 'hero_2'):
+            self.hero_2.hard_reset(self.start_spawn[0], self.start_spawn[1])
+            self.hero_2_current_cost = 0
+            self.hero_2_last_pos = tuple(self.start_spawn)
+            self.sim_manager_2.visited.clear()
+            self.sim_manager_2.frontier.clear()
+            self.sim_manager_2.path.clear()
+            self.sim_manager_2.history.clear()
         self.sim_speed_counter = 0
         self._reset_camera_to_hero()
 
@@ -133,6 +288,9 @@ class GameScene(BaseScene):
         self.manager.switch_scene(MenuScene)
 
     def process_event(self, event):
+        if self.phase_manager.state == "VS_SELECTION":
+            if hasattr(self.ui_manager, 'vs_overlay') and self.ui_manager.vs_overlay.process_event(event):
+                return
         if self.ui_manager.process_event(event): return
         self.input_handler.process_event(event)
 
@@ -140,6 +298,10 @@ class GameScene(BaseScene):
         self.renderer.render(surface)
         if self.phase_manager.state == "LEVEL_COMPLETE": self.victory_overlay.draw(surface)
         if self.settings_overlay.is_open: self.settings_overlay.render(surface)
+        if self.phase_manager.state == "VS_SELECTION":
+            if hasattr(self.ui_manager, 'vs_overlay'):
+                self.ui_manager.vs_overlay.show()
+                self.ui_manager.vs_overlay.draw(surface)
 
     def update(self, time_delta):
         if self.ui_manager.update(time_delta): return
@@ -165,6 +327,10 @@ class GameScene(BaseScene):
             "cost": self.hero_current_cost,
             "cost_max": self.level_manager.get_current_config().get("max_cost", 9999)
         }
+        if self.dashboard.is_vs_mode:
+            game_stats["hero2_ram"] = sum(5 if self.game_map.grid[fy][fx] == 4 else 1 for fx, fy in self.sim_manager_2.frontier)
+            game_stats["hero2_cpu"] = self.sim_manager_2.cpu_usage
+            game_stats["hero2_cost"] = self.hero_2_current_cost
 
         if self.phase_manager.update(time_delta, game_stats, self.dashboard.current_speed) or \
                 self.phase_manager.sync_with_ui(self.dashboard.algo_state, self.dashboard.selected_algo):
@@ -172,41 +338,99 @@ class GameScene(BaseScene):
 
         state = self.phase_manager.state
 
-        if state == "EXECUTING":
-            self.sim_manager.process_execution(self)
+        if state in ["EXECUTING", "MOVING"]:
+            if getattr(self.dashboard, 'is_vs_mode', False):
+                # ==========================================
+                # LUỒNG CHẠY SONG SONG (VS MODE)
+                # ==========================================
+                # 1. Update Hero 1
+                if self.hero1_status == "SEARCHING":
+                    new_status = self._safe_process_execution(self.sim_manager, self.hero, self.dashboard.selected_algo_1)
+                    if new_status != "SEARCHING": self.hero1_status = new_status
+                elif self.hero1_status == "MOVING":
+                    self.hero1_status = self._update_hero_movement(self.hero, 1, time_delta)
 
-        elif state == "MOVING":
-            self.hero.update(time_delta, self.dashboard.current_speed)
+                # 2. Update Hero 2
+                if self.hero2_status == "SEARCHING":
+                    # Tráo đổi sim_speed_counter để Hero 2 chạy đúng tốc độ
+                    temp_counter = self.sim_speed_counter
+                    self.sim_speed_counter = self.sim_speed_counter_2
 
-            # 1. Khóa HazardManager khi Hero đang trong quá trình bay về ô an toàn
-            if not getattr(self.hero, 'is_resurrecting', False):
-                if not self.hero.is_dead and tuple(self.hero.grid_pos) != self.hero_last_pos:
-                    if HazardManager.process_hero_tile(self, self.hero.grid_pos):
-                        self.hero_last_pos = tuple(self.hero.grid_pos)
+                    new_status = self._safe_process_execution(self.sim_manager_2, self.hero_2, self.dashboard.selected_algo_2)
 
-            # [ĐÃ SỬA] 2. KIỂM TRA PHÂN CẤP ƯU TIÊN TRẠNG THÁI (Tránh bị đè State)
-            if self.hero.is_dead:
-                # Nếu Hero vừa bị Hazard phán chết (Max Cost), để yên cho game tự nhảy sang Phase DYING
-                pass
+                    self.sim_speed_counter_2 = self.sim_speed_counter
+                    self.sim_speed_counter = temp_counter
 
-            elif getattr(self.hero, 'just_finished_slip', False):
-                # Ưu tiên reset thuật toán sau khi trượt băng hoặc hồi sinh xong
-                if not self.hero.is_moving:
-                    self.hero.just_finished_slip = False
-                    self.sim_speed_counter = 0
-                    self._start_simulation_callback()
-                    self.phase_manager.set_state("EXECUTING")
+                    if new_status != "SEARCHING": self.hero2_status = new_status
+                elif self.hero2_status == "MOVING":
+                    self.hero2_status = self._update_hero_movement(self.hero_2, 2, time_delta)
 
-            elif not getattr(self.hero, 'is_resurrecting', False):
-                # Chỉ khi Hero hoàn toàn bình thường mới kiểm tra Goal và kích hoạt LRTA* đi tiếp
-                self.phase_manager.check_goal_collision(self.hero, self.goal_pos)
+                # 3. Quản trị Kết quả Cuối cùng
+                active_states = ["SEARCHING", "MOVING"]
+                if self.hero1_status not in active_states and self.hero2_status not in active_states:
+                    h1_win = (self.hero1_status == "REACHED")
+                    h2_win = (self.hero2_status == "REACHED")
 
-                if not self.hero.is_moving and self.dashboard.selected_algo in ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR"]:
-                    self.phase_manager.set_state("EXECUTING")
+                    if h1_win or h2_win:
+                        # [ĐÃ SỬA LỖI 0 THỐNG KÊ]: Chụp lại toàn bộ dữ liệu TRƯỚC KHI tua ngược xóa sạch
+                        self.vs_stats = {
+                            "hero1": {
+                                "cpu": self.sim_manager.cpu_usage,
+                                "ram": sum(5 if self.game_map.grid[fy][fx] == 4 else 1 for fx, fy in self.sim_manager.frontier),
+                                "cost": self.hero_current_cost,
+                                "status": self.hero1_status
+                            },
+                            "hero2": {
+                                "cpu": self.sim_manager_2.cpu_usage,
+                                "ram": sum(5 if self.game_map.grid[fy][fx] == 4 else 1 for fx, fy in self.sim_manager_2.frontier),
+                                "cost": self.hero_2_current_cost,
+                                "status": self.hero2_status
+                            }
+                        }
+                        self.phase_manager.trigger_success()
+                    else:
+                        self.phase_manager.trigger_failure("CẢ 2 THUẬT TOÁN ĐỀU GỤC NGÃ!")
+
+            else:
+                # ==========================================
+                # LUỒNG CHẠY ĐƠN LẺ BÌNH THƯỜNG (Giữ nguyên code cũ)
+                # ==========================================
+                if state == "EXECUTING":
+                    self.sim_manager.process_execution(self)
+
+                elif state == "MOVING":
+                    self.hero.update(time_delta, self.dashboard.current_speed)
+
+                    if not getattr(self.hero, 'is_resurrecting', False):
+                        if not self.hero.is_dead and tuple(self.hero.grid_pos) != self.hero_last_pos:
+                            if HazardManager.process_hero_tile(self, self.hero.grid_pos):
+                                self.hero_last_pos = tuple(self.hero.grid_pos)
+
+                    if self.hero.is_dead:
+                        pass
+                    elif getattr(self.hero, 'just_finished_slip', False):
+                        if not self.hero.is_moving:
+                            self.hero.just_finished_slip = False
+                            self.sim_speed_counter = 0
+                            self._start_simulation_callback()
+                            self.phase_manager.set_state("EXECUTING")
+                    elif not getattr(self.hero, 'is_resurrecting', False):
+                        # [SỬA LỖI 1]: Phục hồi lại hàm kiểm tra đích cho Normal Mode
+                        self.phase_manager.check_goal_collision(self.hero, self.goal_pos)
+
+                        if not self.hero.is_moving and self.dashboard.selected_algo in ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR"]:
+                            self.phase_manager.set_state("EXECUTING")
+
+
+
+
 
         elif state == "DYING":
             if not self.hero.is_dead: self.hero.die()
             self.hero.update(time_delta, self.dashboard.current_speed)
+            if self.dashboard.is_vs_mode and hasattr(self, 'hero_2'):
+                if not self.hero_2.is_dead: self.hero_2.die()
+                self.hero_2.update(time_delta, self.dashboard.current_speed)
 
         elif state == "REWINDING":
             rewind_node = self.sim_manager.rewind_step()
@@ -216,7 +440,34 @@ class GameScene(BaseScene):
             else:
                 self.hero.hard_reset(self.start_spawn[0], self.start_spawn[1])
                 self.hero_current_cost = 0
-            self.phase_manager.check_rewind_completion(self.sim_manager, self._reset_camera_to_hero)
 
-        self.cam_controller.update_cinematic(time_delta, self.dashboard.current_speed, self.dashboard.current_phase, state, self.dashboard.selected_algo, self.sim_manager.visited, self.hero, self.view_h, self.tile_size)
+            if self.dashboard.is_vs_mode and hasattr(self, 'hero_2'):
+                rewind_node_2 = self.sim_manager_2.rewind_step()
+                if rewind_node_2:
+                    self.hero_2.grid_pos = list(rewind_node_2)
+                    self.hero_2.pixel_pos = [rewind_node_2[0] * self.tile_size, rewind_node_2[1] * self.tile_size]
+                else:
+                    self.hero_2.hard_reset(self.start_spawn[0], self.start_spawn[1])
+                    self.hero_2_current_cost = 0
+
+                # [ĐÃ SỬA LỖI]: Truyền thêm self.sim_manager_2 vào cuối để ép game chờ cả 2 tua xong
+                self.phase_manager.check_rewind_completion(self.sim_manager, self._reset_camera_to_hero, self.sim_manager_2)
+            else:
+                self.phase_manager.check_rewind_completion(self.sim_manager, self._reset_camera_to_hero)
+
+        self.cam_controller.update_cinematic(
+            time_delta,
+            self.dashboard.current_speed,
+            self.dashboard.current_phase,
+            state,
+            self.dashboard.selected_algo,
+            self.sim_manager.visited,
+            self.hero,
+            self.view_h,
+            self.tile_size,
+            boss=None,
+            hero_2=getattr(self, 'hero_2', None),
+            is_vs_mode=getattr(self.dashboard, 'is_vs_mode', False)
+        )
+
         self.dashboard.update(time_delta, game_stats)

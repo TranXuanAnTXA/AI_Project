@@ -17,15 +17,15 @@
     },
     {
       "group_name": "Uninformed Search",
-      "algos": ["BFS", "DFS", "BIDIRECTIONAL"]
+      "algos": ["BFS", "DFS","UCS","IDS"]
     }
   ],
   "unlocked_traps": ["WALL", "MUD", "ICE"],
   "max_rounds": 3,
   "retries": 1,
   "ram_max": 250,
-  "cpu_max": 400,
-  "max_cost": 100,
+  "cpu_max": 450,
+  "max_cost": 200,
   "maps": [
     {"name": "Vực Thẳm Phán Xét", "file": "assets/maps/dungeon_map_4.tmx"},
     {"name": "Lăng Mộ Hỗn Mang", "file": "assets/maps/dungeon_map_final_2.tmx"}

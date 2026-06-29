@@ -103,6 +103,9 @@ class GameRenderer:
         if scene.phase_manager.state in ["EXECUTING", "MOVING", "PAUSED", "REWINDING"]:
             if hasattr(scene, 'sim_manager'):
                 scene.sim_manager.draw(world_surface)
+            # [MỚI] Vẽ lưới quét của thuật toán 2
+            if getattr(scene.dashboard, 'is_vs_mode', False) and hasattr(scene, 'sim_manager_2'):
+                scene.sim_manager_2.draw(world_surface)
 
         pygame.draw.rect(world_surface, (231, 76, 60),
                          (scene.goal_pos[0] * scene.tile_size, scene.goal_pos[1] * scene.tile_size, scene.tile_size, scene.tile_size))
@@ -110,7 +113,14 @@ class GameRenderer:
         if hasattr(scene, 'trap_objects'):
             for trap in scene.trap_objects:
                 trap.draw(world_surface, offset_x=0, offset_y=0)
+
+        # Vẽ Hero 1
         scene.hero.draw(world_surface, offset_x=0, offset_y=0)
+
+        # [MỚI] Vẽ Hero 2 dưới dạng Bóng Ma
+        if getattr(scene.dashboard, 'is_vs_mode', False) and hasattr(scene, 'hero_2'):
+            scene.hero_2.draw(world_surface, offset_x=0, offset_y=0)
+
         self.draw_hover_preview(world_surface)
 
         if hasattr(scene, 'boss'):

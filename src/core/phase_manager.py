@@ -1,6 +1,7 @@
 """
 📄 Tên File: phase_manager.py (Nằm trong src/core/)
 * Cập nhật: Thêm trạng thái DYING (Hấp hối) kéo dài 2 giây để Hero kịp chạy animation gục ngã.
+* Cập nhật VS Mode: Thêm trạng thái VS_SELECTION và fix lỗi đồng bộ tua ngược (Rewind).
 """
 
 class PhaseManager:
@@ -42,7 +43,8 @@ class PhaseManager:
             if old_state == "PREPARING":
                 self.timer = self.exec_time
             self.dashboard.algo_state = "RUNNING"
-        elif new_state in ["IDLE", "FAIL_SCREEN", "LEVEL_COMPLETE", "ANNOUNCING", "DYING"]:
+        # [ĐÃ SỬA]: Thêm VS_SELECTION vào danh sách reset algo_state
+        elif new_state in ["IDLE", "FAIL_SCREEN", "LEVEL_COMPLETE", "ANNOUNCING", "DYING", "VS_SELECTION"]:
             self.dashboard.algo_state = "IDLE"
 
     # [MỚI]: Kích hoạt trạng thái Hấp Hối (Chờ 2 giây)
@@ -61,16 +63,13 @@ class PhaseManager:
                 if self.is_boss_win_pending:
                     # Orc/Boss là bên giành chiến thắng trong pha va chạm này
                     if self.current_phase == "HERO":
-                        # Đang chơi phe Hero mà để Orc thắng -> Người chơi THẤT BẠI
                         self.trigger_failure(self.pending_reason)
                     elif self.current_phase == "BOSS":
-                        # Đang chơi phe Boss/Orc mà Orc thắng -> Người chơi THÀNH CÔNG (Phòng thủ tốt)
                         print("💀 GHOST HERO ĐÃ BỊ TIÊU DIỆT HOÀN TOÀN! BOSS WIN.")
                         self.trigger_success()
                 else:
-                    # Các trường hợp chết do tự sập bẫy hoặc cạn kiệt tài nguyên RAM/CPU ở lượt HERO
                     self.trigger_failure(self.pending_reason)
-            return False # Chặn các logic tính toán khác phía dưới
+            return False
 
         if self.state in ["PREPARING", "EXECUTING", "MOVING"]:
             actual_delta = time_delta * speed_multiplier if self.state in ["EXECUTING", "MOVING"] else time_delta
@@ -89,7 +88,6 @@ class PhaseManager:
                 cpu = game_stats.get("cpu", 0)
                 cfg = self.level_manager.get_current_config()
 
-                # [ĐÃ SỬA]: Chuyển sang gọi trigger_death thay vì xử lý ngay lập tức
                 if ram > cfg.get("ram_max", 9999):
                     self.trigger_death("OUT OF MEMORY: TỔN THƯƠNG NHÃN LỰC (RAM MAXED OUT)", is_boss_win=(self.current_phase == "BOSS"))
                 elif cpu > cfg.get("cpu_max", 9999):
@@ -151,8 +149,15 @@ class PhaseManager:
             self.set_state("ANNOUNCING")
             return True
 
-    def check_rewind_completion(self, sim_manager, reset_cam_callback):
-        if sim_manager.is_rewind_finished():
+    # [ĐÃ SỬA]: Thêm tham số sim_manager_2 để kiểm tra song song
+    def check_rewind_completion(self, sim_manager, reset_cam_callback, sim_manager_2=None):
+        is_done = sim_manager.is_rewind_finished()
+
+        # Nếu ở VS Mode, phải chờ cả Hero 2 tua ngược xong mới tính là hoàn thành
+        if sim_manager_2:
+            is_done = is_done and sim_manager_2.is_rewind_finished()
+
+        if is_done:
             reset_cam_callback()
             self.advance_phase_or_round()
 
@@ -160,6 +165,11 @@ class PhaseManager:
         cfg = self.level_manager.get_current_config()
 
         if self.current_phase == "HERO":
+            # [MỚI] Điểm dừng cho VS Mode: Không nhảy thẳng sang Boss, mà hiện Bảng Overlay
+            if getattr(self.dashboard, 'is_vs_mode', False):
+                self.set_state("VS_SELECTION")
+                return
+
             self.current_phase = "BOSS"
         else:
             self.current_phase = "HERO"
@@ -172,4 +182,18 @@ class PhaseManager:
 
         self.dashboard.set_phase(self.current_phase)
         self.dashboard.current_round = self.current_round
+        self.set_state("ANNOUNCING")
+
+    # [MỚI] Hàm chốt hạ: Được gọi khi người chơi bấm nút "CHỌN" trên Bảng Overlay So sánh
+    def confirm_vs_selection(self, selected_algo):
+        print(f"🎮 Đã chốt thuật toán: {selected_algo} cho Phase BOSS")
+        self.hero_history_algo = selected_algo
+        self.dashboard.selected_algo = selected_algo
+
+        # Tắt VS Mode
+        self.dashboard.is_vs_mode = False
+
+        # Tiến vào Phase Boss
+        self.current_phase = "BOSS"
+        self.dashboard.set_phase(self.current_phase)
         self.set_state("ANNOUNCING")

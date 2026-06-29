@@ -14,9 +14,7 @@
     {
       "group_name": "Uninformed Search",
       "algos": [
-        "BFS",
-        "DFS",
-        "BIDIRECTIONAL"
+        "BFS", "DFS","UCS","IDS"
       ]
     }
   ],

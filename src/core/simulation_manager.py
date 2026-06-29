@@ -1,7 +1,8 @@
 """
 📄 Tên File: simulation_manager.py (Nằm trong src/core/)
 * Cập nhật: Sửa lỗi nghiêm trọng cộng dồn CPU. Code mới sử dụng bộ đếm delta an toàn tuyệt đối.
-* Cập nhật mới nhất: Thêm cơ chế Pause thuật toán khi Hero đang trong trạng thái is_dead hoặc is_resurrecting.
+* Cập nhật: Thêm cơ chế Pause thuật toán khi Hero đang trong trạng thái is_dead hoặc is_resurrecting.
+* Cập nhật mới nhất: Thay thế `not self.frontier` bằng cờ `is_exhausted` để tương thích hoàn toàn với Generator đệ quy sâu (AND-OR).
 """
 import pygame
 
@@ -19,6 +20,7 @@ class SimulationManager:
         self.metrics = {}
 
         self.cpu_usage = 0
+        self.is_exhausted = False # [THÊM MỚI] Cờ báo thuật toán đã vét cạn bản đồ
 
         self.surf_visited = pygame.Surface((self.tile_size, self.tile_size), pygame.SRCALPHA)
         self.surf_visited.fill((173, 216, 230, 150))
@@ -37,6 +39,7 @@ class SimulationManager:
         self.history.clear()
         self.metrics.clear()
         self.cpu_usage = 0
+        self.is_exhausted = False # [THÊM MỚI] Reset cờ khi bắt đầu màn mới
 
     def _recalc_cpu(self):
         """Hàm tiện ích: Tính lại toàn bộ CPU từ tập visited hiện tại. Tránh lỗi Desync khi tua ngược."""
@@ -88,6 +91,7 @@ class SimulationManager:
             return bool(self.path)
         except StopIteration:
             self.current = None
+            self.is_exhausted = True # [CẬP NHẬT] Đánh dấu là đã quét sạch toàn bộ map mà không thấy lối đi
             return False
 
     def rewind_step(self):
@@ -168,7 +172,7 @@ class SimulationManager:
                     scene.phase_manager.set_state("MOVING")
                     scene.sim_speed_counter = 0
                     break
-                elif not self.frontier:
+                elif self.is_exhausted: # [SỬA LẠI ĐIỀU KIỆN Ở DÒNG NÀY ĐỂ HỖ TRỢ AND-OR]
                     if scene.phase_manager.current_phase == "HERO":
                         scene.phase_manager.trigger_failure("PATH NOT FOUND: VÉT CẠN BẢN ĐỒ")
                     else:

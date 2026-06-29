@@ -2,15 +2,17 @@
 📄 Tên File: algorithm_registry.py (Nằm trong src/algorithms/)
 * Vai trò: Ánh xạ tên thuật toán (String) trên UI thành các hàm Generator thực tế.
 """
-from src.algorithms.uninformed import bfs_generator, dfs_generator
+from src.algorithms.uninformed import bfs_generator, dfs_generator, ucs_generator, ids_generator
 from src.algorithms.informed import astar_generator, greedy_generator, bidirectional_generator, idastar_generator
 from src.algorithms.local_search import hill_climbing, local_beam_search, simulated_annealing
-from src.algorithms.dynamic_env import lrta_star_generator, and_or_generator
+from src.algorithms.dynamic_env import lrta_star_generator, and_or_search_generator
 
 ALGORITHM_REGISTRY = {
     # LEVEL 1: Uninformed Search
     "BFS": bfs_generator,
     "DFS": dfs_generator,
+    "UCS": ucs_generator,
+    "IDS": ids_generator,
 
     # LEVEL 2: Informed Search
     "GREEDY": greedy_generator,
@@ -25,7 +27,7 @@ ALGORITHM_REGISTRY = {
 
     #lv4: dynamic_env
     "LRTA_STAR": lrta_star_generator,
-    "AND_OR": and_or_generator
+    "AND_OR": and_or_search_generator
 }
 
 def get_algorithm(name: str):

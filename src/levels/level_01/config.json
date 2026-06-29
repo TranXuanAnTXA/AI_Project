@@ -5,7 +5,7 @@
   "algo_groups": [
     {
       "group_name": "Uninformed Search",
-      "algos": ["BFS", "DFS"]
+      "algos": ["BFS", "DFS","UCS","IDS"]
     }
   ],
   "unlocked_traps": ["WALL"],

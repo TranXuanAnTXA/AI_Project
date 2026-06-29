@@ -81,54 +81,120 @@ def lrta_star_generator(grid: Grid, start: Coordinate, goal: Coordinate, heurist
 # ==========================================
 # 2. AND-OR GRAPH SEARCH
 # ==========================================
-def and_or_generator(grid: Grid, start: Coordinate, goal: Coordinate):
-    validate_grid(grid)
-    visited_nodes = {start}
+def and_or_search_generator(grid, start, goal):
+    """
+    Thuật toán AND-OR Search chuẩn hóa hệ tọa độ (Row, Col).
+    start và goal nhận vào dưới dạng (row, col) từ SimulationManager.
+    """
+    visited_ui = set()
+    frontier_ui = set()
+    memo = {}
 
-    def get_outcomes(state: Coordinate, action_target: Coordinate):
-        """Giả lập môi trường rủi ro: Nếu ô kế là băng (3), có khả năng bị trượt ra xung quanh"""
-        outcomes = [action_target]
-        cell_val = grid[action_target[1]][action_target[0]]
-        if cell_val == 3:
-            for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-                nx, ny = action_target[0] + dx, action_target[1] + dy
-                if 0 <= ny < len(grid) and 0 <= nx < len(grid[0]) and grid[ny][nx] != 1:
-                    outcomes.append((nx, ny))
+    ICE_ID = 3
+    TRAP_ID = 99
+
+    def get_outcomes(r, c, action):
+        """Hành động của Môi trường (AND Node): Trả về các trạng thái (row, col) có thể xảy ra"""
+        dr, dc = action
+        nr, nc = r + dr, c + dc
+        rows, cols = len(grid), len(grid[0])
+
+        # Kiểm tra đập tường hoặc ra ngoài biên map -> Kẹt lại ô cũ (r, c)
+        if not (0 <= nr < rows and 0 <= nc < cols) or grid[nr][nc] == 1:
+            return [(r, c)]
+
+        outcomes = [(nr, nc)]
+
+        # LOGIC TRƯỢT BĂNG: Nếu bước vào ô băng, có rủi ro trượt thêm 1 ô theo hướng hành động
+        if grid[nr][nc] == ICE_ID:
+            sr, sc = nr + dr, nc + dc
+            if 0 <= sr < rows and 0 <= sc < cols and grid[sr][sc] != 1:
+                outcomes.append((sr, sc))
+
         return outcomes
 
-    def or_search(state: Coordinate, path: list):
-        visited_nodes.add(state)
+    def or_search(state, path):
+        """Hành động của AI (OR Node): Chọn nước đi tốt nhất. state là tuple (r, c)"""
+        visited_ui.add(state)
+        if state in frontier_ui:
+            frontier_ui.remove(state)
 
-        # Nhả yield tĩnh để UI không bị đứng
-        yield state, visited_nodes, [state], None, {}
+        # CHÚ Ý: Luôn yield None cho path trong quá trình tìm kiếm offline
+        yield state, set(visited_ui), list(frontier_ui), None
 
         if state == goal:
-            return [state]
-        if state in path:
-            return None
+            return ["REACHED"]
 
-        for action_target in iter_neighbors(grid, state):
-            outcomes = get_outcomes(state, action_target)
+        if state in path:
+            return "FAILURE"
+
+        if state in memo:
+            return memo[state]
+
+        best_plan = "FAILURE"
+
+        # Thứ tự di chuyển theo dòng và cột: Lên, Xuống, Trái, Phải
+        # action = (d_row, d_col)
+        moves = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        for action in moves:
+            dr, dc = action
+            nr, nc = state[0] + dr, state[1] + dc
+
+            # Nạp các ô hợp lệ xung quanh vào Frontier để UI vẽ màu vàng
+            if 0 <= nr < len(grid) and 0 <= nc < len(grid[0]) and grid[nr][nc] != 1:
+                frontier_ui.add((nr, nc))
+
+            outcomes = get_outcomes(state[0], state[1], action)
+
+            if outcomes == [state]:
+                continue
+
             plan = yield from and_search(outcomes, path + [state])
 
-            if plan is not None:
-                # Tìm được Happy Path -> Trả về mảng đường đi
-                return [state] + plan[action_target]
-        return None
+            if plan != "FAILURE":
+                best_plan = [action, plan]
+                break
 
-    def and_search(states: list, path: list):
-        conditional_plans = {}
-        for state in states:
-            plan = yield from or_search(state, path)
-            if plan is None:
-                return None # Rủi ro dẫn đến ngõ cụt -> Phá sản nhánh này
-            conditional_plans[state] = plan
-        return conditional_plans
+        memo[state] = best_plan
+        return best_plan
 
-    # [MỚI]: Nhả frame giả đầu tiên để tránh lỗi "Vét cạn bản đồ"
-    yield start, visited_nodes, [start], None, {}
+    def and_search(states, path):
+        """Xử lý mọi rủi ro của môi trường (Phải tìm đường sống cho cả TH trượt và không trượt)"""
+        plan = {}
+        for s in states:
+            if grid[s[0]][s[1]] == TRAP_ID: # Truy cập mảng grid[row][col] chuẩn xác
+                return "FAILURE"
 
-    happy_path = yield from or_search(start, [])
+            res = yield from or_search(s, path)
+            if res == "FAILURE":
+                return "FAILURE"
+            plan[s] = res
+        return plan
 
-    # Kết thúc: Nhả ra con đường an toàn nhất
-    yield start, visited_nodes, [], happy_path, {}
+    # ==========================================
+    # CHẠY LÕI VÀ TRÍCH XUẤT HAPPY PATH ĐỂ DI CHUYỂN
+    # ==========================================
+    final_plan = yield from or_search(start, [])
+
+    if final_plan != "FAILURE":
+        # Rút trích 'happy path' (Trường hợp lý tưởng không bị trượt) để Hero chạy
+        happy_path = [start]
+        curr = start
+        curr_plan = final_plan
+
+        while curr != goal and curr_plan and curr_plan != ["REACHED"] and curr_plan != "FAILURE":
+            action = curr_plan[0]
+            nr, nc = curr[0] + action[0], curr[1] + action[1]
+            happy_path.append((nr, nc))
+            curr = (nr, nc)
+
+            if isinstance(curr_plan[1], dict) and curr in curr_plan[1]:
+                curr_plan = curr_plan[1][curr]
+            else:
+                break
+
+        # Yield kết quả cuối cùng chứa con đường hoàn chỉnh
+        yield goal, set(visited_ui), list(frontier_ui), happy_path
+    else:
+        yield start, set(visited_ui), list(frontier_ui), []
