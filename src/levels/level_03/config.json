@@ -2,7 +2,20 @@
   "id": 3,
   "name": "LEVEL 3: THE ILLUSIONIST",
   "desc": "Local Search (Khắc phục ngõ cụt)",
-  "algorithms": ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM"],
+  "algo_groups": [
+    {
+      "group_name": "Local Search",
+      "algos": ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM"]
+    },
+    {
+      "group_name": "Informed Search",
+      "algos": ["GREEDY", "ASTAR", "IDASTAR"]
+    },
+    {
+      "group_name": "Uninformed Search",
+      "algos": ["BFS", "DFS", "BIDIRECTIONAL"]
+    }
+  ],
   "unlocked_traps": ["WALL"],
   "max_rounds": 2,
   "retries": 1,

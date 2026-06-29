@@ -1,7 +1,7 @@
 """
 📄 File: src/core/grid_map/map_controller.py
 * Vai trò: Bộ não quản lý logic ma trận đa tầng.
-* Cập nhật: Thêm nhận diện Bẫy Tử Thần (Trap - ID: 99).
+* Cập nhật: CHUYỂN HOÀN TOÀN TRAP SANG TILE LAYER (Loại bỏ Object Offset).
 """
 from collections import deque
 
@@ -19,13 +19,15 @@ class MapController:
 
         self.expanded_layers = {}
 
-        # Mảng collision_grid giờ chứa: 0 (Sàn), 1 (Tường), 3 (Băng), 4 (Sương mù), 5 (Bùn), 99 (Bẫy chết)
+        # Mảng collision_grid: 0 (Sàn), 1 (Tường), 3 (Băng), 4 (Sương mù), 5 (Bùn), 99 (Bẫy chết)
         self.collision_grid = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.boss_walls = [[0 for _ in range(self.width)] for _ in range(self.height)]
         self.border_walls = [[0 for _ in range(self.width)] for _ in range(self.height)]
 
         self.start_points = []
         self.goal_point = None
+        self.boss_spawn = None
+        self.trap_objects = [] # Danh sách bẫy được sinh ra từ lưới
 
         self._build_expanded_grids(raw_layers_data, original_width, original_height)
         self._translate_objects(raw_objects, tile_size)
@@ -58,22 +60,35 @@ class MapController:
                         if self.collision_grid[y + 1][x + 1] != 1:
                             self.collision_grid[y + 1][x + 1] = 3
 
-                    # Gán Sương Mù (4) - Hỗ trợ cả Fog và Frog
+                    # Gán Sương Mù (4)
                     elif name in ["Fog", "Frog"] and gid != 0:
                         if self.collision_grid[y + 1][x + 1] != 1:
                             self.collision_grid[y + 1][x + 1] = 4
 
-                    # [MỚI]: Gán Bẫy Tử Thần (99)
+                    # Gán Bẫy Tử Thần bằng Tile (99)
                     elif name.lower() == "trap" and gid != 0:
                         if self.collision_grid[y + 1][x + 1] != 1:
                             self.collision_grid[y + 1][x + 1] = 99
 
+        # Vẽ viền ranh giới (Border)
         for x in range(self.width):
             self._set_border(x, 0)
             self._set_border(x, self.height - 1)
         for y in range(self.height):
             self._set_border(0, y)
             self._set_border(self.width - 1, y)
+
+        # [LOGIC MỚI]: Quét toàn bộ lưới một lần cuối. Nếu thấy số 99, đăng ký nó thành 1 bẫy 1x1 ô.
+        for y in range(self.height):
+            for x in range(self.width):
+                if self.collision_grid[y][x] == 99:
+                    self.trap_objects.append({
+                        "name": "tile_trap",
+                        "grid_x": x,
+                        "grid_y": y,
+                        "grid_width": 1,
+                        "grid_height": 1
+                    })
 
     def _set_border(self, x: int, y: int):
         self.border_walls[y][x] = 1
@@ -89,6 +104,9 @@ class MapController:
                 self.start_points.append((grid_x, grid_y))
             elif name == 'goal':
                 self.goal_point = (grid_x, grid_y)
+            elif name == 'boss_spawn':
+                self.boss_spawn = (grid_x, grid_y)
+            # ĐÃ XÓA BLOCK ĐỌC "TRAP" Ở ĐÂY ĐỂ TRÁNH NHIỄU
 
     def is_walkable(self, x: int, y: int) -> bool:
         if x < 0 or x >= self.width or y < 0 or y >= self.height: return False
@@ -119,7 +137,6 @@ class MapController:
             return "INVALID"
 
         old_value = self.collision_grid[y][x]
-
         self.collision_grid[y][x] = 1
         self.boss_walls[y][x] = 1
 
@@ -136,7 +153,6 @@ class MapController:
                 self.boss_walls[y][x] = 0
                 self.collision_grid[y][x] = 0
 
-                # Khôi phục các lớp sàn nếu đập bỏ tường
                 if self.expanded_layers.get("Mud_floor") and self.expanded_layers["Mud_floor"][y][x] != 0:
                     self.collision_grid[y][x] = 5
                 elif self.expanded_layers.get("Ice_floor") and self.expanded_layers["Ice_floor"][y][x] != 0:
@@ -144,7 +160,6 @@ class MapController:
                 elif (self.expanded_layers.get("Fog") and self.expanded_layers["Fog"][y][x] != 0) or \
                         (self.expanded_layers.get("Frog") and self.expanded_layers["Frog"][y][x] != 0):
                     self.collision_grid[y][x] = 4
-                # [MỚI]: Khôi phục Bẫy Tử Thần
                 elif (self.expanded_layers.get("Trap") and self.expanded_layers["Trap"][y][x] != 0) or \
                         (self.expanded_layers.get("trap") and self.expanded_layers["trap"][y][x] != 0):
                     self.collision_grid[y][x] = 99
@@ -161,5 +176,4 @@ class MapController:
         if is_wall(x + 1, y): mask += 2
         if is_wall(x, y + 1): mask += 4
         if is_wall(x - 1, y): mask += 8
-
         return mask

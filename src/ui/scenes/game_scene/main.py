@@ -106,15 +106,28 @@ class GameScene(BaseScene):
         self._reset_camera_to_hero()
 
     def _restart_game_logic(self):
-        self.level_manager.set_level(self.level_manager.current_level)
-        self._reset_board_for_retry()
-        self.phase_manager.reset_for_new_level()
-        self.dashboard.refresh_algorithms()
-        if hasattr(self.camera, 'target_zoom'): self.camera.target_zoom = 1.0
+        """
+        HARD RESET (Thua hoàn toàn hoặc bấm Restart từ Setting):
+        Hủy hoàn toàn ván chơi hiện tại, quay về màn hình Splash để nạp lại từ đầu.
+        Đảm bảo xóa sạch bộ nhớ AI, lưới tìm kiếm và các bức tường cũ.
+        """
+        from src.ui.scenes.splash_scene import SplashScene
+
+        # 1. Đóng các menu/overlay hiện tại
         self.settings_overlay.is_open = False
         self.failure_overlay.hide()
 
+        # 2. Lấy thông tin Level hiện tại để truyền cho SplashScene
+        current_lvl = self.level_manager.current_level
+        level_info = self.level_manager.get_current_config()
+
+        # 3. Chuyển cảnh về màn hình Loading (SplashScene)
+        # Quá trình này sẽ hủy bỏ GameScene hiện tại. Sau khi Loading xong,
+        # SplashScene sẽ tạo ra một GameScene hoàn toàn mới, đọc lại map gốc.
+        self.manager.switch_scene(SplashScene, level_info=level_info, level_to_load=current_lvl)
+
     def _quit_game_logic(self):
+        """QUIT GAME: Trở về Menu chính"""
         from src.ui.scenes.menu_scene import MenuScene
         self.settings_overlay.is_open = False
         self.manager.switch_scene(MenuScene)

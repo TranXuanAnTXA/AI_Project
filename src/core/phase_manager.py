@@ -54,14 +54,21 @@ class PhaseManager:
         self.set_state("DYING")
 
     def update(self, time_delta, game_stats, speed_multiplier=1.0):
-        # [MỚI]: Xử lý đếm ngược 2s khi đang hấp hối
+        # [ĐÃ SỬA]: Xử lý phân cấp phe thắng/thua khi kết thúc hiệu ứng gục ngã
         if self.state == "DYING":
             self.death_timer -= time_delta
             if self.death_timer <= 0:
                 if self.is_boss_win_pending:
-                    print("💀 GHOST HERO ĐÃ BỊ TIÊU DIỆT HOÀN TOÀN! BOSS WIN.")
-                    self.trigger_success()
+                    # Orc/Boss là bên giành chiến thắng trong pha va chạm này
+                    if self.current_phase == "HERO":
+                        # Đang chơi phe Hero mà để Orc thắng -> Người chơi THẤT BẠI
+                        self.trigger_failure(self.pending_reason)
+                    elif self.current_phase == "BOSS":
+                        # Đang chơi phe Boss/Orc mà Orc thắng -> Người chơi THÀNH CÔNG (Phòng thủ tốt)
+                        print("💀 GHOST HERO ĐÃ BỊ TIÊU DIỆT HOÀN TOÀN! BOSS WIN.")
+                        self.trigger_success()
                 else:
+                    # Các trường hợp chết do tự sập bẫy hoặc cạn kiệt tài nguyên RAM/CPU ở lượt HERO
                     self.trigger_failure(self.pending_reason)
             return False # Chặn các logic tính toán khác phía dưới
 

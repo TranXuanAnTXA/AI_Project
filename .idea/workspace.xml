@@ -1,37 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9e8596fe-c5d1-4f07-8beb-09d4a720f78b" name="Changes" comment="Add Local Search">
-      <change afterPath="$PROJECT_DIR$/assets/maps/Objects.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_4.tmx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_5.tmx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/Swordsman_lvl3_Death_without_shadow.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/Swordsman_lvl3_Hurt_without_shadow.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/sprites/Swordsman_lvl3_Idle_without_shadow.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/game_rules/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/core/game_rules/hazard_manager.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ui/components/camera_controller.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ui/components/ui_manager.py" afterDir="false" />
+    <list default="true" id="9e8596fe-c5d1-4f07-8beb-09d4a720f78b" name="Changes" comment="Add dynamic_env">
+      <change afterPath="$PROJECT_DIR$/assets/fonts/Roboto-Bold.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/fonts/Roboto-Regular.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/bg_blue.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/bg_red.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprites/orc3_hurt_without_shadow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprites/orc3_idle_without_shadow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprites/orc3_run_attack_without_shadow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprites/orc3_run_without_shadow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprites/orc3_walk_without_shadow.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/sprites/trap_animation.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/save_data.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/core/game_rules/debuff_manager.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/adversarial_scene.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_6_21_2026_8_07_PM_[Changes]/button_background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_6_21_2026_8_07_PM_[Changes]/hero.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_6_21_2026_8_07_PM_[Changes]/menu_scene_background.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_6_21_2026_8_07_PM_[Changes]/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_6_21_2026_8_07_PM__Changes_.xml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/maps/dungeon_map_1.tmx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_1.tmx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/maps/dungeon_map_2.tmx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_2.tmx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/maps/dungeon_map_3.tmx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_3.tmx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/maps/walls_floor.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/walls_floor.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/algorithm_registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/algorithm_registry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/dynamic_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/dynamic_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/informed.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/informed.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/local_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/local_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/maps/dungeon_map_5.tmx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_6.tmx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/algorithms/adversarial.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/adversarial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/fixed_maps.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_06/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/grid_map/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/grid_map/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/grid_map/map_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/grid_map/map_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/grid_map/map_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/grid_map/map_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/core/level_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/level_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/core/phase_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/phase_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/simulation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/simulation_manager.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/entities/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/boss.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/boss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/trap.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/trap.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/levels/level_01/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_01/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/levels/level_02/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_02/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/levels/level_03/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_03/config.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/levels/level_04/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_04/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/components/camera.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/camera.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/components/camera_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/camera_controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/components/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/dashboard.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/components/grid_renderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_06/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/components/ui_theme.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/ui_theme.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/input_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/input_handler.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/renderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/renderer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ui/scenes/splash_scene.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/splash_scene.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +54,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="Jupyter Notebook" />
         <option value="Python Script" />
       </list>
     </option>
@@ -73,37 +87,39 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/ADMIN/OneDrive/Desktop/AI_2/Self-Defeating-Dungeon/assets/sprites&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms.executor": "Run",
+    "Python.main.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/ADMIN/OneDrive/Desktop/AI_2/Self-Defeating-Dungeon/assets/images",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\images" />
+      <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\fonts" />
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\sprites" />
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\maps" />
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\src\levels" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\sprites" />
+      <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\maps" />
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\src\ui" />
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\src\ui\components" />
-      <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\sprites" />
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\src\algorithms\utils" />
-      <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\src\algorithms" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -272,7 +288,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782591448297</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Add dynamic_env">
+      <option name="closed" value="true" />
+      <created>1782656365329</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1782656365329</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -291,6 +315,7 @@
     <MESSAGE value="Update UI" />
     <MESSAGE value="assets" />
     <MESSAGE value="Add Local Search" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add Local Search" />
+    <MESSAGE value="Add dynamic_env" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add dynamic_env" />
   </component>
 </project>

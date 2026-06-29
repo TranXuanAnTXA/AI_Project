@@ -67,8 +67,12 @@ class SplashScene(BaseScene):
                 if self.alpha >= 255:
                     self.alpha = 255
                     # [ĐÃ SỬA]: Gọi GameScene và truyền lại đúng Level mà người chơi chọn
-                    from src.ui.scenes.game_scene.main import GameScene
-                    self.manager.switch_scene(GameScene, level_to_load=self.level_to_load)
+                    if self.level_to_load >= 6:
+                        from src.ui.scenes.game_scene.adversarial_scene import AdversarialScene
+                        self.manager.switch_scene(AdversarialScene, level_to_load=self.level_to_load)
+                    else:
+                        from src.ui.scenes.game_scene.main import GameScene
+                        self.manager.switch_scene(GameScene, level_to_load=self.level_to_load)
 
     def render(self, surface):
         surface.fill((0, 0, 0))

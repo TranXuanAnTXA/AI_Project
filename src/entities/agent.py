@@ -1,5 +1,6 @@
 import pygame
 import math
+from src.core.game_rules.debuff_manager import DebuffComponent
 
 class SpriteSheet:
     def __init__(self, filename):
@@ -44,6 +45,8 @@ class Agent:
         self.is_resurrecting = False
         self.resurrect_timer = 0.0
         self.rollback_pos = None
+
+        self.debuffs = DebuffComponent(self)
 
         if isinstance(sprite_config, str):
             config = {
@@ -175,6 +178,7 @@ class Agent:
             return
 
         actual_speed = self.speed * speed_multiplier
+        self.debuffs.update(time_delta, speed_multiplier)
 
         # [LOGIC MỚI]: Ưu tiên xử lý Hồi sinh (Chặn mọi hành động khác)
         if self.is_resurrecting:
@@ -324,3 +328,4 @@ class Agent:
         rect = self.image.get_rect(center=(center_x, center_y))
         rect.y -= 8
         surface.blit(self.image, rect)
+        self.debuffs.draw_effects(surface, offset_x, offset_y)

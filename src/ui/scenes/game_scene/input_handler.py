@@ -59,7 +59,16 @@ class GameInputHandler:
                         grid_x = int(real_world_x // scene.tile_size)
                         grid_y = int(real_world_y // scene.tile_size)
 
-                        if (grid_x, grid_y) == (scene.start_spawn[0], scene.start_spawn[1]) or (grid_x, grid_y) == scene.goal_pos:
+                        protected_tiles = [tuple(scene.goal_pos)]
+                        if hasattr(scene, 'start_spawn'):
+                            protected_tiles.append(tuple(scene.start_spawn))
+                        if hasattr(scene, 'hero_start'):
+                            protected_tiles.append(tuple(scene.hero_start))
+                        if hasattr(scene, 'boss_start'):
+                            protected_tiles.append(tuple(scene.boss_start))
+
+                        # Nếu click trúng ô được bảo vệ thì bỏ qua
+                        if (grid_x, grid_y) in protected_tiles:
                             return
 
                         # CHUỘT TRÁI: XÂY BẪY + CHỐNG KẸT

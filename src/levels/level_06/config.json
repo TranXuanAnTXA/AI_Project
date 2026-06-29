@@ -1,8 +1,12 @@
 {
-  "id": 4,
-  "name": "LEVEL 4: THỬ THÁCH TỐI THƯỢNG",
-  "desc": "Lăng Mộ Hỗn Mang",
+  "id": 6,
+  "name": "LEVEL 6: THE ORC CHASER",
+  "desc": "Chạy ngay đi!",
   "algo_groups": [
+    {
+      "group_name": "Adversarial Search",
+      "algos": ["ALPHA_BETA", "MINIMAX", "EXPECTIMAX"]
+    },
     {
       "group_name": "Real-time & Contingency",
       "algos": ["LRTA_STAR", "AND_OR"]
@@ -20,14 +24,16 @@
       "algos": ["BFS", "DFS", "BIDIRECTIONAL"]
     }
   ],
-  "unlocked_traps": ["WALL", "MUD", "ICE"],
+  "unlocked_traps": ["WALL", "ICE", "TRAP", "FOG"],
   "max_rounds": 3,
-  "retries": 1,
-  "ram_max": 250,
+  "retries": 3,
+  "ram_max": 400,
   "cpu_max": 400,
-  "max_cost": 100,
+  "max_cost": 500,
   "maps": [
-    {"name": "Vực Thẳm Phán Xét", "file": "assets/maps/dungeon_map_4.tmx"},
-    {"name": "Lăng Mộ Hỗn Mang", "file": "assets/maps/dungeon_map_final_2.tmx"}
+    {
+      "name": "Map Đối Kháng",
+      "file": "assets/maps/dungeon_map_6.tmx"
+    }
   ]
 }

@@ -16,6 +16,38 @@ class Camera:
         self.is_dragging = False
         self.drag_last_pos = (0, 0)
 
+    def focus_on_entities(self, entity1, entity2, padding=300, max_zoom=1.0):
+        # Lấy tọa độ thực tế của 2 nhân vật
+        x1, y1 = entity1.pixel_pos
+        x2, y2 = entity2.pixel_pos
+
+        # Tính toán hình chữ nhật bao quanh cả 2
+        min_x, max_x = min(x1, x2), max(x1, x2)
+        min_y, max_y = min(y1, y2), max(y1, y2)
+
+        # Trọng tâm Camera sẽ nằm giữa 2 nhân vật
+        center_x = (min_x + max_x) / 2
+        center_y = (min_y + max_y) / 2
+        self.target_center = pygame.math.Vector2(center_x, center_y)
+
+        # [ĐÃ SỬA] Tính toán mức Zoom (Nhân đôi padding để có viền rộng ở cả 2 bên)
+        width = (max_x - min_x) + (padding * 2)
+        height = (max_y - min_y) + (padding * 2)
+
+        # Tránh chia cho 0
+        if width <= 0: width = 1
+        if height <= 0: height = 1
+
+        zoom_x = self.viewport_width / width
+        zoom_y = self.viewport_height / height
+
+        # Lấy mức zoom nhỏ hơn để đảm bảo thấy cả 2 chiều
+        min_zoom = self.get_min_zoom()
+
+        # [ĐÃ SỬA] Sử dụng biến max_zoom thay vì hardcode 1.5.
+        # Đảm bảo camera không zoom quá sát khi Boss và Hero chạm mặt nhau.
+        self.target_zoom = max(min_zoom, min(zoom_x, zoom_y, max_zoom))
+
     def get_min_zoom(self) -> float:
         min_zoom_x = self.viewport_width / self.map_pixel_width
         min_zoom_y = self.viewport_height / self.map_pixel_height

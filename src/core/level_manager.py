@@ -1,6 +1,6 @@
 """
 📄 Tên File: level_manager.py (Nằm trong src/core/)
-* Cập nhật: Cơ chế Lazy Loading (Chỉ tải config của Level khi được yêu cầu).
+* Cập nhật: Hỗ trợ cấu trúc algo_groups để phân loại thuật toán.
 """
 import os
 import json
@@ -15,15 +15,11 @@ class LevelManager:
         self.save_file = "save_data.json"
         self.unlocked_level = self._load_save_data()
 
-        # ĐÃ XÓA hàm _load_all_levels() ở đây!
-
     def _load_save_data(self) -> int:
-        """Đọc file save, ép buộc mở khóa luôn đến Level 3 để TEST"""
         if os.path.exists(self.save_file):
             with open(self.save_file, "r") as f:
                 try:
                     data = json.load(f)
-                    # Ép hệ thống luôn lấy mức lớn nhất giữa file save và 3
                     return max(data.get("unlocked_level", 1), 3)
                 except:
                     return 3
@@ -41,13 +37,11 @@ class LevelManager:
     def advance_level(self) -> bool:
         if self.current_level < self.max_levels:
             self.current_level += 1
-            print(f"🌍 Đã chuyển sang Level {self.current_level}: {self.get_current_config()['name']}")
+            print(f"🌍 Đã chuyển sang Level {self.current_level}: {self.get_current_config().get('name', '')}")
             return True
         return False
 
-    # [MỚI] Hàm chỉ nạp đúng 1 file config khi được gọi
     def get_level_config(self, level_id: int):
-        # Nếu đã nạp rồi thì lấy ra dùng luôn (Cache)
         if level_id in self.levels_config:
             return self.levels_config[level_id]
 
@@ -63,7 +57,6 @@ class LevelManager:
                 except json.JSONDecodeError:
                     print(f"❌ Lỗi: File {config_path} bị sai định dạng JSON!")
 
-        # Nếu file chưa tồn tại hoặc bị lỗi, trả về cấu hình an toàn
         fallback_data = self._get_fallback_config(level_id)
         self.levels_config[level_id] = fallback_data
         return fallback_data
@@ -73,7 +66,12 @@ class LevelManager:
             "id": level_id,
             "name": f"LEVEL {level_id}: COMING SOON",
             "desc": "Đang xây dựng...",
-            "algorithms": ["BFS"],
+            "algo_groups": [
+                {
+                    "group_name": "Uninformed Search",
+                    "algos": ["BFS"]
+                }
+            ],
             "unlocked_traps": ["WALL"],
             "max_rounds": 3,
             "retries": 1,
@@ -81,17 +79,23 @@ class LevelManager:
             "map_file": "assets/maps/dungeon_map_1.tmx"
         }
 
-    # Đã sửa lại để gọi hàm lấy theo ID ở trên
     def get_current_config(self):
         return self.get_level_config(self.current_level)
 
     def get_unlocked_algorithms(self):
-        return self.get_current_config()["algorithms"]
+        """Gom toàn bộ thuật toán trong các nhóm lại thành 1 list phẳng (Phòng ngừa lỗi tương thích ngược)"""
+        cfg = self.get_current_config()
+        if "algo_groups" in cfg:
+            algos = []
+            for group in cfg["algo_groups"]:
+                algos.extend(group.get("algos", []))
+            return algos
+        return cfg.get("algorithms", [])
 
     def set_level(self, level_num):
         if 1 <= level_num <= self.max_levels:
             self.current_level = level_num
-            print(f"🌍 Đã nạp dữ liệu Level {level_num}: {self.get_current_config()['name']}")
+            print(f"🌍 Đã nạp dữ liệu Level {level_num}: {self.get_current_config().get('name', '')}")
 
     def get_current_maps(self):
         return self.get_current_config().get("maps", [])

@@ -39,6 +39,9 @@ class GridMap:
         self.start_points = self.controller.start_points
         self.goal_point = self.controller.goal_point
 
+        self.boss_spawn = self.controller.boss_spawn
+        self.trap_objects = self.controller.trap_objects
+
     def is_walkable(self, grid_x: int, grid_y: int) -> bool:
         return self.controller.is_walkable(grid_x, grid_y)
 

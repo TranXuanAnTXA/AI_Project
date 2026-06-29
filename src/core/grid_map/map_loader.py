@@ -64,16 +64,18 @@ class MapLoader:
             self.layer_names.append(name)
 
     def _parse_objects(self):
-        """Quét thẻ <objectgroup> để trích xuất tọa độ sinh Point (Start, Goal)."""
+        """Quét thẻ <objectgroup> để trích xuất tọa độ sinh Point (Start, Goal, Trap)."""
         if self.root is None: return
 
         for obj_group in self.root.findall('objectgroup'):
             for obj in obj_group.findall('object'):
                 obj_data = {
                     "name": obj.attrib.get('name', 'Unknown'),
-                    # Ép kiểu float vì tọa độ Tiled có thể mang số thập phân
                     "x": float(obj.attrib.get('x', 0)),
-                    "y": float(obj.attrib.get('y', 0))
+                    "y": float(obj.attrib.get('y', 0)),
+                    # [THÊM MỚI] Lấy kích thước để tính toán vùng hoạt động của bẫy
+                    "width": float(obj.attrib.get('width', 0)),
+                    "height": float(obj.attrib.get('height', 0))
                 }
                 self.objects.append(obj_data)
 
