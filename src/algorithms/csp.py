@@ -26,68 +26,113 @@ class CSP:
 # ==========================================
 # 1. BACKTRACKING SEARCH
 # ==========================================
-class BacktrackingCSP:
-    def find_solution(self, csp):
-        # Bắt đầu với một bảng mã trống (chưa điền ô nào)
-        return self.backtrack({}, csp)
+def BacktrackingCSP(grid, start, goal):
+    """
+    CSP Online Search: Hero trực tiếp dò đường.
+    ĐÃ ÁP DỤNG FIX CỦA BOSS: 
+    1. Tách biệt Explored và Current Path để UI vẽ đúng 1 đường Backtrack (Không bị loang).
+    2. Đồng bộ tọa độ (Row, Col) để SimulationManager nhận chuẩn xác mà không cần sửa file core.
+    """
+    max_cost = getattr(grid, 'max_cost', 9999)
+    max_cpu = getattr(grid, 'cpu_max', 5000)
 
-    def backtrack(self, assignment, csp):
-        # Nếu đã điền đủ tất cả các ô -> Mở khóa thành công!
-        if len(assignment) == len(csp.variables):
-            return assignment
+    def get_step_cost(pos):
+        return getattr(grid, 'get_cost', lambda p: 1)(pos)
 
-        # 1. Heuristic MRV & Degree: Chọn ô khó nhằn nhất để giải quyết trước
-        var = self.select_unassigned_variable(assignment, csp)
+    def get_step_cpu(pos):
+        return getattr(grid, 'get_cpu', lambda p: 1)(pos)
 
-        # 2. Heuristic LCV: Chọn màu nào ít gây khó dễ cho hàng xóm nhất
-        for value in self.order_domain_values(var, assignment, csp):
-            if csp.is_consistent(var, value, assignment):
-                assignment[var] = value # Thử điền màu này
-                
-                # Đi tiếp sâu xuống các ô còn lại
-                result = self.backtrack(assignment, csp)
-                if result is not None:
-                    return result
-                
-                # BACKTRACK: Nếu đi tiếp thất bại, rút màu ra thử màu khác
-                del assignment[var] 
-                
-        return None # Thất bại
+    def get_neighbors(pos):
+        x, y = pos
+        directions = [(0, -1), (1, 0), (0, 1), (-1, 0)] # Trái, Xuống, Phải, Lên
+        valid = []
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if 0 <= ny < len(grid) and 0 <= nx < len(grid[0]):
+                if grid[ny][nx] != 1:  # Né Tường cứng
+                    valid.append((nx, ny))
+        return valid
 
-    def select_unassigned_variable(self, assignment, csp):
-        """ 
-        MRV (Minimum Remaining Values): Chọn ô còn ít màu để thử nhất.
-        Nếu hòa, dùng Degree Heuristic: Chọn ô có nhiều hàng xóm chưa điền nhất.
-        """
-        unassigned = [v for v in csp.variables if v not in assignment]
+    stack = [(start, 0)] 
+    
+    # [TÁCH BIỆT LOGIC]: global_explored chỉ dùng để AI KHÔNG ĐI LẠI ĐƯỜNG CŨ
+    # Tuyệt đối không gửi cái này cho UI vẽ!
+    global_explored = set([start]) 
+    
+    hero_pos = start
+    metrics = {'cpu': 0, 'ram': 0, 'cost': 0, 'backtracks': 0}
+
+    # Hàm tiện ích: Gói dữ liệu và LẬT TỌA ĐỘ sang (Row, Col) cho SimulationManager
+    def yield_state(target_path):
+        # 1. UI CHỈ VẼ STACK HIỆN TẠI (Đường dây thừng đang đi)
+        # Chuyển (X, Y) thành (Y, X) VÀ GIỮ NGUYÊN LÀ LIST (để SimulationManager.history lưu đúng thứ tự)
+        current_active_path_rc = [(s[0][1], s[0][0]) for s in stack]
         
-        def mrv_degree_key(var):
-            # Số màu còn hợp lệ (MRV)
-            valid_values = sum(1 for val in csp.domains[var] if csp.is_consistent(var, val, assignment))
-            # Số hàng xóm chưa điền (Degree - Đảo dấu âm để sort ưu tiên số lớn)
-            unassigned_neighbors = -sum(1 for n in csp.neighbors[var] if n not in assignment)
-            return (valid_values, unassigned_neighbors)
+        # 2. Dịch target_path thành (Y, X)
+        pygame_path_rc = [(p[1], p[0]) for p in target_path] if target_path else []
+        
+        # 3. current_node (Hero Pos) cũng phải là (Y, X)
+        current_node_rc = (hero_pos[1], hero_pos[0])
+        
+        # [QUAN TRỌNG]: Đưa [] vào vị trí frontier_rc (tham số thứ 3) để tắt hoàn toàn màu vàng (tránh loang)
+        return current_node_rc, current_active_path_rc, [], pygame_path_rc, metrics
 
-        # Trả về biến có giá trị (MRV nhỏ nhất, Degree lớn nhất)
-        return min(unassigned, key=mrv_degree_key)
+    while stack:
+        target_node, target_path_cost = stack[-1] 
 
-    def order_domain_values(self, var, assignment, csp):
-        """
-        LCV (Least Constraining Value): Sắp xếp các màu. 
-        Màu nào ít làm mất đi sự lựa chọn của hàng xóm sẽ được thử trước.
-        """
-        def count_conflicts(value):
-            conflicts = 0
-            for neighbor in csp.neighbors[var]:
-                if neighbor not in assignment and value in csp.domains[neighbor]:
-                    conflicts += 1
-            return conflicts
+        # -----------------------------------------------------------
+        # ĐI LÙI (BACKTRACKING)
+        # -----------------------------------------------------------
+        if hero_pos != target_node:
+            step_path = [hero_pos, target_node]
+            hero_pos = target_node
+            
+            metrics['cost'] = target_path_cost 
+            metrics['backtracks'] += 1
+            metrics['cpu'] += 5
+            
+            yield yield_state(step_path)
+            continue
 
-        # Lọc các màu hợp lệ và sắp xếp theo số lượng xung đột từ thấp đến cao
-        valid_values = [val for val in csp.domains[var] if csp.is_consistent(var, val, assignment)]
-        return sorted(valid_values, key=count_conflicts)
+        if hero_pos == goal:
+            yield yield_state([hero_pos])
+            break
 
+        # -----------------------------------------------------------
+        # TÌM ĐƯỜNG MỚI (CHỈ CHỌN 1 ĐƯỜNG)
+        # -----------------------------------------------------------
+        neighbors = get_neighbors(hero_pos)
+        valid_next_step = None
 
+        for neighbor in neighbors:
+            if neighbor not in global_explored: 
+                next_cost = metrics['cost'] + get_step_cost(neighbor)
+                next_cpu = metrics['cpu'] + get_step_cpu(neighbor)
+                
+                if next_cost <= max_cost and next_cpu <= max_cpu:
+                    valid_next_step = neighbor
+                    break # Đi đúng 1 nhánh
+
+        # -----------------------------------------------------------
+        # THỰC THI (TIẾN LÊN HOẶC RÚT LUI)
+        # -----------------------------------------------------------
+        if valid_next_step:
+            global_explored.add(valid_next_step)
+            new_cost = metrics['cost'] + get_step_cost(valid_next_step)
+            
+            stack.append((valid_next_step, new_cost))
+            
+            step_path = [hero_pos, valid_next_step]
+            hero_pos = valid_next_step
+            
+            metrics['cost'] = new_cost
+            metrics['cpu'] += 1
+            
+            yield yield_state(step_path)
+            
+        else:
+            # Ngõ cụt -> Rút nhánh khỏi Stack. Vòng lặp sau UI sẽ tự xóa màu ô này!
+            stack.pop()
 # ==========================================
 # 2. AC-3 (Arc Consistency 3 - Lan truyền Ràng buộc)
 # ==========================================
@@ -182,10 +227,12 @@ class MinConflicts:
 # HÀM BỌC (WRAPPER FUNCTIONS)
 # ==========================================
 
-def backtracking_search(csp, *args, **kwargs):
-    solver = BacktrackingCSP()
-    return solver.find_solution(csp)
+# 1. Hàm dành cho Hệ thống Tìm đường (Pathfinding / Walker)
+def csp_backtracking(grid, start, goal):
+    """Đổi tên lại để file algorithm_registry.py có thể gọi đúng tên"""
+    return BacktrackingCSP(grid, start, goal)
 
+# 2. Các hàm dành cho Hệ thống Minigame (Giải mã màu sắc/Sudoku)
 def ac3_preprocess(csp, *args, **kwargs):
     solver = AC3()
     return solver.preprocess(csp)

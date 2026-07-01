@@ -131,7 +131,10 @@ class SimulationManager:
             scene.sim_speed_counter -= 1.0
             path_found = self.step()
 
-            local_search_algos = ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR"]
+            local_search_algos = [
+                "HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR",
+                "Pure Backtracking", "Forward Checking", "MRV (Heuristic)", "FC + MRV + LCV"
+            ]
 
             if scene.dashboard.selected_algo in local_search_algos:
                 current_node = self.current

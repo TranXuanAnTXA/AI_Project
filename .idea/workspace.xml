@@ -1,32 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="9e8596fe-c5d1-4f07-8beb-09d4a720f78b" name="Changes" comment="Update ADversarial&#10;logic restart và quit game&#10;sửa phông chữ&#10;cập nhật UI&#10;sửa camera">
-      <change afterPath="$PROJECT_DIR$/assets/maps/trap_animation.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/ui/overlays/vs_overlay.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/maps/dungeon_map_4.tmx" beforeDir="false" afterPath="$PROJECT_DIR$/assets/maps/dungeon_map_4.tmx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/algorithm_registry.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/algorithm_registry.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/dynamic_env.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/dynamic_env.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/algorithms/uninformed.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/algorithms/uninformed.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/phase_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/phase_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/core/simulation_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/core/simulation_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/entities/agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/levels/level_01/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_01/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/levels/level_02/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_02/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/levels/level_03/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_03/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/levels/level_04/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_04/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/levels/level_06/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/levels/level_06/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/camera_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/camera_controller.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/dashboard.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/dashboard.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/components/ui_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/components/ui_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ui/scenes/game_scene/renderer.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ui/scenes/game_scene/renderer.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="128" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -56,6 +43,10 @@
     &quot;accountId&quot;: &quot;2041c74c-4e37-448d-b2ea-3266f55cb2e5&quot;
   }
 }</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8
 }</component>
@@ -64,25 +55,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms.executor": "Run",
-    "Python.main.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/ADMIN/OneDrive/Desktop/AI_2/Self-Defeating-Dungeon/assets/images",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Hi/OneDrive/Desktop/Self-Defeating-Dungeon&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\ADMIN\OneDrive\Desktop\AI_2\Self-Defeating-Dungeon\assets\images" />
@@ -109,8 +101,9 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.11 (PythonProject)" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="RUN_TOOL" value="" />
@@ -208,6 +201,13 @@
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
+    <list>
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.map_loader" />
+      <item itemvalue="Python.run_test" />
+      <item itemvalue="Python.tile_engine" />
+      <item itemvalue="Python tests.Python tests for tests.test_algorithms.test_contract_registry_matches_available_algorithms" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.main" />
@@ -221,7 +221,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.138" />
+        <option value="bundled-python-sdk-929bdeb5c976-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.33813.30" />
       </set>
     </attachedChunks>
   </component>

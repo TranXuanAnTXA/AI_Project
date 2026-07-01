@@ -1,0 +1,28 @@
+{
+    "id": 5,
+    "name": "LEVEL 5: CONSTRAINT MATRIX",
+    "desc": "Thử thách giải bài toán thỏa mãn ràng buộc tài nguyên khắt khe",
+    "algorithms": [
+        "Pure Backtracking",
+        "Forward Checking",
+        "MRV (Heuristic)",
+        "FC + MRV + LCV"
+    ],
+    "unlocked_traps": [
+        "WALL",
+        "MUD",
+        "ICE",
+        "TRAP"
+    ],
+    "max_rounds": 3,
+    "retries": 1,
+    "ram_max": 2500,
+    "cpu_max": 5000,
+    "max_cost": 1200,
+    "maps": [
+        {
+            "name": "Constraint Matrix",
+            "file": "assets/maps/dungeon_map_5.tmx"
+        }
+    ]
+}

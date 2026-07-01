@@ -418,9 +418,10 @@ class GameScene(BaseScene):
                         # [SỬA LỖI 1]: Phục hồi lại hàm kiểm tra đích cho Normal Mode
                         self.phase_manager.check_goal_collision(self.hero, self.goal_pos)
 
-                        if not self.hero.is_moving and self.dashboard.selected_algo in ["HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR"]:
+                        if not self.hero.is_moving and self.dashboard.selected_algo in [
+                            "HILL_CLIMBING", "SIMULATED_ANNEALING", "LOCAL_BEAM", "LRTA_STAR",
+                            "Pure Backtracking", "Forward Checking", "MRV (Heuristic)", "FC + MRV + LCV"]:
                             self.phase_manager.set_state("EXECUTING")
-
 
 
 
