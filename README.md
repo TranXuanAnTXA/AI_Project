@@ -1,7 +1,11 @@
 # Self-Defeating Dungeon
+Dự án được thực hiện bởi Nông Hoàng Anh và Trần Xuân An
 
-Dự án game Pygame với kiến trúc tách rõ giữa logic AI, core game, entity và UI.
+# Mô tả
+Nơi chạy và so sánh các thuật toán tìm kiếm
 
+# Chủ đề
+Lấy
 ## Cấu trúc
 
 - `main.py`: điểm khởi động game
